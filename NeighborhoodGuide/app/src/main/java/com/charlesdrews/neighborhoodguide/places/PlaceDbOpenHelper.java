@@ -36,7 +36,16 @@ public class PlaceDbOpenHelper extends SQLiteOpenHelper {
                     + COL_DESCRIPTION + " TEXT, "
                     + COL_IS_FAVORITE + " INTEGER)";
 
-    public PlaceDbOpenHelper(Context context) {
+    private static PlaceDbOpenHelper mInstance;
+
+    public static PlaceDbOpenHelper getInstance(Context context) {
+        if (mInstance == null) {
+            mInstance = new PlaceDbOpenHelper(context.getApplicationContext());
+        }
+        return mInstance;
+    }
+
+    private PlaceDbOpenHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
     }
 
@@ -50,6 +59,8 @@ public class PlaceDbOpenHelper extends SQLiteOpenHelper {
         db.execSQL(SQL_DROP_PLACES_TABLE);
         onCreate(db);
     }
+
+    //TODO - add methods to return only columns needed, not all columns
 
     public Cursor getAllPlaces() {
         SQLiteDatabase db = getReadableDatabase();

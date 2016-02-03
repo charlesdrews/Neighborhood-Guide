@@ -73,13 +73,13 @@ public class PlaceDbOpenHelper extends SQLiteOpenHelper {
         );
     }
 
-    public Place getPlace(int id) {
+    public Place getPlace(int placeId) {
         SQLiteDatabase db = getReadableDatabase();
         Cursor cursor = db.query(
                 TABLE_PLACES,       // table
                 null,               // columns (null = *)
                 COL_ID + " = ?",    // selection: WHERE _id = ?
-                new String[]{String.valueOf(id)}, // selectionArgs: WHERE _id = id
+                new String[]{String.valueOf(placeId)}, // selectionArgs: WHERE _id = id
                 null,               // group by
                 null,               // having
                 null                // order by
@@ -112,9 +112,17 @@ public class PlaceDbOpenHelper extends SQLiteOpenHelper {
         db.insert(TABLE_PLACES, null, values);
     }
 
-    public void deletePlace(int id) {
+    public void deletePlace(int placeId) {
         SQLiteDatabase db = getWritableDatabase();
-        db.execSQL("DELETE FROM " + TABLE_PLACES + " WHERE " + COL_ID + " = " + id);
+        db.execSQL("DELETE FROM " + TABLE_PLACES + " WHERE " + COL_ID + " = " + placeId);
+    }
+
+    public void setFavoriteStatus(int placeId, boolean isFavorite) {
+        SQLiteDatabase db = getWritableDatabase();
+        //TODO - is it better to user db.update()???
+        db.execSQL("UPDATE " + TABLE_PLACES
+                + " SET " + COL_IS_FAVORITE + " = " + (isFavorite ? 1 : 0)
+                + " WHERE " + COL_ID + " = " + placeId);
     }
 
     public void initializeDbForTesting() {

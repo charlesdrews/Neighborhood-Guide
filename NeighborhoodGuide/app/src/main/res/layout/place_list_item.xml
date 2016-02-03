@@ -7,7 +7,7 @@
     <TextView
         android:id="@+id/list_place_title"
         android:text="title"
-        android:textSize="@dimen/list_text_large"
+        android:textAppearance="?android:attr/textAppearanceListItem"
         android:textStyle="bold"
         android:textColor="@color/colorBlack"
         android:layout_centerVertical="true"
@@ -17,7 +17,7 @@
     <TextView
         android:id="@+id/list_place_location"
         android:text="location"
-        android:textSize="@dimen/list_text_small"
+        android:textAppearance="?android:attr/textAppearanceListItem"
         android:textStyle="normal"
         android:textColor="@color/colorGray"
         android:layout_toRightOf="@id/list_place_title"

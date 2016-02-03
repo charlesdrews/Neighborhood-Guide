@@ -39,4 +39,8 @@ public class Place {
     public boolean isFavorite() {
         return mIsFavorite;
     }
+
+    public void setFavoriteStatus(boolean isFavorite) {
+        mIsFavorite = isFavorite;
+    }
 }

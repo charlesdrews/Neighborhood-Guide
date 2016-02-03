@@ -21,12 +21,14 @@ import android.widget.TextView;
 import com.charlesdrews.neighborhoodguide.places.PlaceDbOpenHelper;
 
 public class MainActivity extends AppCompatActivity {
-    public static final String SELECTED_PLACE_KEY = MainActivity.class.getPackage() + ".selectedPlaceKey";
+    public static final String SELECTED_PLACE_KEY = MainActivity.class.getCanonicalName() + ".selectedPlaceKey";
+    public static final String FROM_FAVORITES_KEY = MainActivity.class.getCanonicalName() + ".fromFavoritesKey";
+    public static final int REQUEST_CODE = 0;
 
     private ListView mListView;
     private PlaceDbOpenHelper mHelper;
     private CursorAdapter mAdapter;
-
+    private boolean mStartDetailFromFavs;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,6 +39,7 @@ public class MainActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
         getSupportActionBar().setTitle(R.string.title_text);
 
+        mStartDetailFromFavs = false;
         mListView = (ListView) findViewById(R.id.list_view);
         mHelper = new PlaceDbOpenHelper(MainActivity.this);
 
@@ -72,9 +75,33 @@ public class MainActivity extends AppCompatActivity {
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 Intent intent = new Intent(MainActivity.this, DetailActivity.class);
                 intent.putExtra(SELECTED_PLACE_KEY, (int) id);
-                startActivity(intent);
+                intent.putExtra(FROM_FAVORITES_KEY, mStartDetailFromFavs);
+                startActivityForResult(intent, REQUEST_CODE);
             }
         });
+
+        //TODO - add an onItemLongClick to launch dialog asking if user wants to fav/unfav the item (as appropriate)
+    }
+
+    @Override
+    public void onBackPressed() {
+        //TODO - check if not on "home" screen (if on favs or search) and if so, just go back to home
+        // otherwise call super and potentially exit the app
+        super.onBackPressed();
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (resultCode == RESULT_OK) {
+            // RESULT_OK indicates either the user went from favorites to detail and needs to return to favorites,
+            // or user favorited a place and needs to go to favorites
+            resetToFavoritesScreen();
+        } else {
+            // RESULT_CANCELED indicates user did not go to detail from favorites, and did not favorite a place
+            resetToHomeScreen();
+            //TODO - have this go back to prior search results instead of home
+        }
     }
 
     @Override
@@ -131,22 +158,21 @@ public class MainActivity extends AppCompatActivity {
     private void resetToHomeScreen() {
         getSupportActionBar().setTitle(R.string.title_text);
         getSupportActionBar().setDisplayHomeAsUpEnabled(false);
-
-        // refresh adapter w/ all places
-        mAdapter.swapCursor(mHelper.getAllPlaces());
+        mStartDetailFromFavs = false;
+        mAdapter.swapCursor(mHelper.getAllPlaces()); // refresh adapter w/ all places
     }
 
     private void resetToFavoritesScreen() {
         getSupportActionBar().setTitle(R.string.action_favorites);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-
-        // refresh adapter w/ only favorite places
-        mAdapter.swapCursor(mHelper.getFavoritePlaces());
+        mStartDetailFromFavs = true;
+        mAdapter.swapCursor(mHelper.getFavoritePlaces()); // refresh adapter w/ only favorite places
     }
 
     private void resetToSearchScreen() {
         getSupportActionBar().setTitle(R.string.action_search);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        mStartDetailFromFavs = false;
 
         //TODO implement search function & show results in list view
         Snackbar.make(findViewById(R.id.coordinator_layout_main), "SHOW SEARCH HERE", Snackbar.LENGTH_SHORT);

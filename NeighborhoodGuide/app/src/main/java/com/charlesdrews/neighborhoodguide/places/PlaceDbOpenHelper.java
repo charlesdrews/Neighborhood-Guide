@@ -78,13 +78,13 @@ public class PlaceDbOpenHelper extends SQLiteOpenHelper {
     }
 
     public Cursor searchPlaces(String query) {
-        //TODO - search several fields, not just title
+        //TODO - search more fields, not just title & location
         SQLiteDatabase db = getReadableDatabase();
         return db.query(
                 TABLE_PLACES,       // table
                 null,               // columns (null = *)
-                COL_TITLE + " LIKE ?", // selection: WHERE title LIKE '%query%'
-                new String[]{ "%" + query + "%" }, // selectionArgs
+                COL_TITLE + " LIKE ? OR " + COL_LOCATION + " LIKE ?", // selection: WHERE title LIKE '%query%'
+                new String[]{"%"+query+"%", "%"+query+"%"}, // selectionArgs
                 null,               // group by
                 null,               // having
                 COL_TITLE           // order by

@@ -81,8 +81,9 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 Intent intent = new Intent(MainActivity.this, DetailActivity.class);
-                cursor.moveToPosition(position);
-                intent.putExtra(SELECTED_PLACE_KEY, cursor.getInt(cursor.getColumnIndex(PlaceDbOpenHelper.COL_ID)));
+                Cursor currentCursor = mAdapter.getCursor();
+                currentCursor.moveToPosition(position);
+                intent.putExtra(SELECTED_PLACE_KEY, currentCursor.getInt(currentCursor.getColumnIndex(PlaceDbOpenHelper.COL_ID)));
                 intent.putExtra(FROM_FAVORITES_KEY, mStartDetailFromFavs);
                 startActivityForResult(intent, REQUEST_CODE);
             }
@@ -135,7 +136,9 @@ public class MainActivity extends AppCompatActivity {
         } else {
             // RESULT_CANCELED indicates user did not go to detail from favorites, and did not favorite a place
             resetToHomeScreen();
-            //TODO - have this go back to prior search results instead of home
+            if (!mSearchView.getQuery().toString().isEmpty()) {
+                updateCursorWithSearch(mSearchView.getQuery().toString());
+            }
         }
     }
 
@@ -152,14 +155,6 @@ public class MainActivity extends AppCompatActivity {
 
             default:
                 return super.onOptionsItemSelected(item);
-        }
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        if (mSearchView != null) {
-            updateCursorWithSearch(mSearchView.getQuery().toString());
         }
     }
 

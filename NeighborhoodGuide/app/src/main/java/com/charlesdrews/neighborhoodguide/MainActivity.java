@@ -84,9 +84,10 @@ public class MainActivity extends AppCompatActivity {
         //TODO - add an onItemLongClick to launch dialog asking if user wants to fav/unfav the item (as appropriate)
 
         // handle search action
-        handleIntent(getIntent());
+        //handleIntent(getIntent());
     }
 
+    /*
     @Override
     protected void onNewIntent(Intent intent) {
         //super.onNewIntent(intent);
@@ -102,6 +103,7 @@ public class MainActivity extends AppCompatActivity {
             mAdapter.swapCursor(mHelper.searchPlaces(query));
         }
     }
+    */
 
     /*
     @Override
@@ -150,6 +152,20 @@ public class MainActivity extends AppCompatActivity {
         SearchManager searchManager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
         SearchView searchView = (SearchView) menu.findItem(R.id.action_search).getActionView();
         searchView.setSearchableInfo(searchManager.getSearchableInfo(getComponentName()));
+
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                updateCursorWithSearch(query);
+                return true;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                updateCursorWithSearch(newText);
+                return true;
+            }
+        });
         //return super.onCreateOptionsMenu(menu);
         return true;
     }
@@ -211,5 +227,9 @@ public class MainActivity extends AppCompatActivity {
             //mAdapter.swapCursor(mHelper.getAllPlaces());
         }
         */
+    }
+
+    public void updateCursorWithSearch(String query) {
+        mAdapter.swapCursor(mHelper.searchPlaces(query));
     }
 }

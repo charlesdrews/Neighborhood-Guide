@@ -44,7 +44,7 @@ public class MainActivity extends AppCompatActivity {
         mHelper = new PlaceDbOpenHelper(MainActivity.this);
 
         //TODO - remove this db initialization when done testing
-        mHelper.initializeDbForTesting();
+        mHelper.initializeDbForTesting(MainActivity.this);
 
         Cursor cursor = mHelper.getAllPlaces();
 

@@ -6,6 +6,8 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
+import com.charlesdrews.neighborhoodguide.R;
+
 /**
  * Created by charlie on 2/2/16.
  */
@@ -125,11 +127,17 @@ public class PlaceDbOpenHelper extends SQLiteOpenHelper {
                 + " WHERE " + COL_ID + " = " + placeId);
     }
 
-    public void initializeDbForTesting() {
+    public void initializeDbForTesting(Context context) {
         SQLiteDatabase db = getWritableDatabase();
         db.execSQL("DELETE FROM " + TABLE_PLACES);
-        insertPlace("Pizza Palace", "10 E Main St", "Brooklyn", "it's a pizza place", false);
-        insertPlace("Main Park", "2nd Avenue", "Manhattan", "it's a park", false);
-        insertPlace("Central Park", "978 5th Avenue", "Manhattan", "it's a big park", false);
+        for (int i = 1; i <= 10; i++) {
+            insertPlace(
+                    "Place " + i,
+                    "Address " + i,
+                    "Neighborhood " + i,
+                    context.getString(R.string.large_text),
+                    false
+            );
+        }
     }
 }

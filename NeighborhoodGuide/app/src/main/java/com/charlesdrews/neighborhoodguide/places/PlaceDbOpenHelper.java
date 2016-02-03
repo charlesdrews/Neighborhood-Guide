@@ -12,6 +12,8 @@ import com.charlesdrews.neighborhoodguide.R;
  * Created by charlie on 2/2/16.
  */
 public class PlaceDbOpenHelper extends SQLiteOpenHelper {
+    //TODO - make this a singleton!!!
+
     private static final int DATABASE_VERSION = 1;
     private static final String DATABASE_NAME = "places_db";
 
@@ -69,6 +71,20 @@ public class PlaceDbOpenHelper extends SQLiteOpenHelper {
                 null,               // columns (null = *)
                 COL_IS_FAVORITE + " = 1", // selection: WHERE is_favorite = 1
                 null,               // selectionArgs (hardcoded in selection)
+                null,               // group by
+                null,               // having
+                COL_TITLE           // order by
+        );
+    }
+
+    public Cursor searchPlaces(String query) {
+        //TODO - search several fields, not just title
+        SQLiteDatabase db = getReadableDatabase();
+        return db.query(
+                TABLE_PLACES,       // table
+                null,               // columns (null = *)
+                COL_TITLE + " LIKE ?", // selection: WHERE title LIKE '%query%'
+                new String[]{ "%" + query + "%" }, // selectionArgs
                 null,               // group by
                 null,               // having
                 COL_TITLE           // order by

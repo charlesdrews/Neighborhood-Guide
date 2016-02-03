@@ -32,6 +32,7 @@ public class MainActivity extends AppCompatActivity {
     private MenuItem mMenuFavItem;
     private PlaceDbOpenHelper mHelper;
     private CursorAdapter mAdapter;
+    private SearchView mSearchView;
     private boolean mOnFavsScreen;
     private boolean mStartDetailFromFavs;
 
@@ -50,7 +51,7 @@ public class MainActivity extends AppCompatActivity {
         mHelper = PlaceDbOpenHelper.getInstance(MainActivity.this);
 
         //TODO - remove this db initialization when done testing
-        mHelper.initializeDbForTesting(MainActivity.this);
+        //mHelper.initializeDbForTesting(MainActivity.this);
 
         final Cursor cursor = mHelper.getAllPlaces();
 
@@ -96,10 +97,10 @@ public class MainActivity extends AppCompatActivity {
         mMenuFavItem = menu.findItem(R.id.action_favorites);
 
         SearchManager searchManager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
-        SearchView searchView = (SearchView) menu.findItem(R.id.action_search).getActionView();
-        searchView.setSearchableInfo(searchManager.getSearchableInfo(getComponentName()));
+        mSearchView = (SearchView) menu.findItem(R.id.action_search).getActionView();
+        mSearchView.setSearchableInfo(searchManager.getSearchableInfo(getComponentName()));
 
-        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+        mSearchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
                 updateCursorWithSearch(query);
@@ -151,6 +152,14 @@ public class MainActivity extends AppCompatActivity {
 
             default:
                 return super.onOptionsItemSelected(item);
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (mSearchView != null) {
+            updateCursorWithSearch(mSearchView.getQuery().toString());
         }
     }
 

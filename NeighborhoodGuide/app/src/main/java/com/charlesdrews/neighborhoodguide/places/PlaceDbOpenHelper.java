@@ -12,8 +12,6 @@ import com.charlesdrews.neighborhoodguide.R;
  * Created by charlie on 2/2/16.
  */
 public class PlaceDbOpenHelper extends SQLiteOpenHelper {
-    //TODO - make this a singleton!!!
-
     private static final int DATABASE_VERSION = 1;
     private static final String DATABASE_NAME = "places_db";
 

@@ -34,7 +34,6 @@ public class MainActivity extends AppCompatActivity {
 
     private MenuItem mMenuFavItem;
     private PlaceDbOpenHelper mHelper;
-    //private CursorAdapter mAdapter;
     private RecyclerCursorAdapter mAdapter;
     private SearchView mSearchView;
     private boolean mOnFavsScreen;
@@ -63,26 +62,9 @@ public class MainActivity extends AppCompatActivity {
         mAdapter = new RecyclerCursorAdapter(MainActivity.this, cursor);
         recyclerView.setAdapter(mAdapter);
 
-        /*
-
-        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Intent intent = new Intent(MainActivity.this, DetailActivity.class);
-                Cursor currentCursor = mAdapter.getCursor();
-                currentCursor.moveToPosition(position);
-                intent.putExtra(SELECTED_PLACE_KEY, currentCursor.getInt(currentCursor.getColumnIndex(PlaceDbOpenHelper.COL_ID)));
-                intent.putExtra(FROM_FAVORITES_KEY, mStartDetailFromFavs);
-                startActivityForResult(intent, REQUEST_CODE);
-            }
-        });
-
         //TODO - add an onItemLongClick to launch dialog asking if user wants to fav/unfav the item (as appropriate)
         // if item not yet a favorite, title="Add to favorites?" button icons = heart & X
         // if item already a favorite, title="Remove from favorites?" button icons = trashcan & X
-        */
-
-
     }
 
     @Override

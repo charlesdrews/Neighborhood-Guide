@@ -7,4 +7,5 @@
     <dimen name="text_margin">16dp</dimen>
     <dimen name="list_text_large">18sp</dimen>
     <dimen name="list_text_small">14sp</dimen>
+    <dimen name="recycler_item_offset">4dp</dimen>
 </resources>

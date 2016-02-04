@@ -6,10 +6,12 @@ import android.graphics.drawable.Drawable;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.charlesdrews.neighborhoodguide.places.PlaceDbOpenHelper;
 
@@ -46,8 +48,15 @@ public class RecyclerCursorAdapter extends RecyclerView.Adapter<RecyclerCursorAd
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View v = LayoutInflater.from(parent.getContext())
                     .inflate(R.layout.place_card_item, parent, false);
-        ViewHolder vh = new ViewHolder(v);
-        return vh;
+
+        v.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Toast.makeText(mContext, "you clicked a card", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        return new ViewHolder(v);
     }
 
     @Override
@@ -65,6 +74,14 @@ public class RecyclerCursorAdapter extends RecyclerView.Adapter<RecyclerCursorAd
             } else {
                 holder.mFavIconImgView.setImageDrawable(mNonFavIcon);
             }
+
+            holder.mFavIconImgView.setOnTouchListener(new View.OnTouchListener() {
+                @Override
+                public boolean onTouch(View v, MotionEvent event) {
+                    Toast.makeText(mContext, "you clicked a heart", Toast.LENGTH_SHORT).show();
+                    return true; // this consumes the entire touch event; will not trigger viewHolder's onclick()
+                }
+            });
         }
     }
 

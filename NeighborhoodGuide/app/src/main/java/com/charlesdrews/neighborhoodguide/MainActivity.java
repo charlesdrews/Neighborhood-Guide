@@ -51,46 +51,19 @@ public class MainActivity extends AppCompatActivity {
 
         mOnFavsScreen = false;
         mStartDetailFromFavs = false;
-        //ListView listView = (ListView) findViewById(R.id.list_view);
-        RecyclerView recyclerView = (RecyclerView) findViewById(R.id.recycler_view);
+
         mHelper = PlaceDbOpenHelper.getInstance(MainActivity.this);
-
-
         final Cursor cursor = mHelper.getAllPlaces();
 
+        RecyclerView recyclerView = (RecyclerView) findViewById(R.id.recycler_view);
         recyclerView.setHasFixedSize(true);
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(MainActivity.this);
         recyclerView.setLayoutManager(linearLayoutManager);
+
         mAdapter = new RecyclerCursorAdapter(MainActivity.this, cursor);
         recyclerView.setAdapter(mAdapter);
 
         /*
-        mAdapter = new CursorAdapter(MainActivity.this, cursor, 0) { // context, cursor, flags
-            @Override
-            public View newView(Context context, Cursor cursor, ViewGroup parent) {
-                return LayoutInflater.from(context).inflate(R.layout.place_list_item, parent, false);
-            }
-
-            @Override
-            public void bindView(View view, Context context, Cursor cursor) {
-                TextView titleView = (TextView) view.findViewById(R.id.list_place_title);
-                titleView.setText(
-                        cursor.getString( cursor.getColumnIndex(PlaceDbOpenHelper.COL_TITLE) )
-                );
-
-                TextView locationView = (TextView) view.findViewById(R.id.list_place_location);
-                locationView.setText(
-                        cursor.getString( cursor.getColumnIndex(PlaceDbOpenHelper.COL_LOCATION) )
-                );
-
-                //TODO - add heart icon if item is a favorite
-                //probably also just add a separate favorites activity
-                //  -almost same look as main activity, but w/o favorite action icon in toolbar
-                //  -also don't show heart icon next to every item in favorites activity
-            }
-        };
-
-        listView.setAdapter(mAdapter);
 
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override

@@ -50,8 +50,6 @@ public class MainActivity extends AppCompatActivity {
         ListView listView = (ListView) findViewById(R.id.list_view);
         mHelper = PlaceDbOpenHelper.getInstance(MainActivity.this);
 
-        //TODO - remove this db initialization when done testing
-        //mHelper.initializeDbForTesting(MainActivity.this);
 
         final Cursor cursor = mHelper.getAllPlaces();
 
@@ -72,6 +70,11 @@ public class MainActivity extends AppCompatActivity {
                 locationView.setText(
                         cursor.getString( cursor.getColumnIndex(PlaceDbOpenHelper.COL_LOCATION) )
                 );
+
+                //TODO - add heart icon if item is a favorite
+                //probably also just add a separate favorites activity
+                //  -almost same look as main activity, but w/o favorite action icon in toolbar
+                //  -also don't show heart icon next to every item in favorites activity
             }
         };
 
@@ -90,6 +93,8 @@ public class MainActivity extends AppCompatActivity {
         });
 
         //TODO - add an onItemLongClick to launch dialog asking if user wants to fav/unfav the item (as appropriate)
+        // if item not yet a favorite, title="Add to favorites?" button icons = heart & X
+        // if item already a favorite, title="Remove from favorites?" button icons = trashcan & X
     }
 
     @Override
@@ -166,7 +171,7 @@ public class MainActivity extends AppCompatActivity {
         mOnFavsScreen = false;
         mStartDetailFromFavs = false;
 
-        mAdapter.swapCursor(mHelper.getAllPlaces()); // refresh adapter w/ all places
+        mAdapter.changeCursor(mHelper.getAllPlaces()); // refresh adapter w/ all places
     }
 
     private void resetToFavoritesScreen() {
@@ -177,10 +182,10 @@ public class MainActivity extends AppCompatActivity {
         mOnFavsScreen = true;
         mStartDetailFromFavs = true;
 
-        mAdapter.swapCursor(mHelper.getFavoritePlaces()); // refresh adapter w/ only favorite places
+        mAdapter.changeCursor(mHelper.getFavoritePlaces()); // refresh adapter w/ only favorite places
     }
 
     public void updateCursorWithSearch(String query) {
-        mAdapter.swapCursor(mHelper.searchPlaces(query));
+        mAdapter.changeCursor(mHelper.searchPlaces(query));
     }
 }

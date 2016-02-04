@@ -39,6 +39,9 @@ public class PlaceDbOpenHelper extends SQLiteOpenHelper {
     public static PlaceDbOpenHelper getInstance(Context context) {
         if (mInstance == null) {
             mInstance = new PlaceDbOpenHelper(context.getApplicationContext());
+
+            //TODO - remove this db initialization when done testing
+            mInstance.initializeDbForTesting(context);
         }
         return mInstance;
     }
@@ -152,7 +155,7 @@ public class PlaceDbOpenHelper extends SQLiteOpenHelper {
                 + " WHERE " + COL_ID + " = " + placeId);
     }
 
-    public void initializeDbForTesting(Context context) {
+    private void initializeDbForTesting(Context context) {
         SQLiteDatabase db = getWritableDatabase();
         db.execSQL("DELETE FROM " + TABLE_PLACES);
         for (int i = 1; i <= 10; i++) {

@@ -9,15 +9,11 @@ import android.support.v7.widget.Toolbar;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.charlesdrews.neighborhoodguide.places.Place;
 import com.charlesdrews.neighborhoodguide.places.PlaceDbOpenHelper;
 
 public class DetailActivity extends AppCompatActivity {
-    private TextView mLocationView;
-    private TextView mNeighborhoodView;
-    private TextView mDescriptionView;
     private int mSelectedPlaceId;
     private boolean mGoBackToFavoritesScreen;
 
@@ -25,13 +21,14 @@ public class DetailActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_detail);
+
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
-        mLocationView = (TextView) findViewById(R.id.detail_location);
-        mNeighborhoodView = (TextView) findViewById(R.id.detail_neighborhood);
-        mDescriptionView = (TextView) findViewById(R.id.detail_description);
+        TextView mLocationView = (TextView) findViewById(R.id.detail_location);
+        TextView mNeighborhoodView = (TextView) findViewById(R.id.detail_neighborhood);
+        TextView mDescriptionView = (TextView) findViewById(R.id.detail_description);
         final PlaceDbOpenHelper helper = PlaceDbOpenHelper.getInstance(DetailActivity.this);
 
         mSelectedPlaceId = getIntent().getExtras().getInt(MainActivity.SELECTED_PLACE_KEY, -1);
@@ -43,6 +40,7 @@ public class DetailActivity extends AppCompatActivity {
         mGoBackToFavoritesScreen = getIntent().getExtras().getBoolean(MainActivity.FROM_FAVORITES_KEY);
 
         getSupportActionBar().setTitle(selectedPlace.getTitle());
+        //TODO - don't concatenate these
         mLocationView.setText("Location: " + selectedPlace.getLocation());
         mNeighborhoodView.setText("Neighborhood: " + selectedPlace.getNeighborhood());
         mDescriptionView.setText(selectedPlace.getDescription());

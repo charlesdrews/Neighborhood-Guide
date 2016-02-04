@@ -10,6 +10,8 @@ import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.view.menu.ActionMenuItem;
 import android.support.v7.view.menu.ActionMenuItemView;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
@@ -19,6 +21,7 @@ import android.view.MenuItem;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.CursorAdapter;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -31,7 +34,8 @@ public class MainActivity extends AppCompatActivity {
 
     private MenuItem mMenuFavItem;
     private PlaceDbOpenHelper mHelper;
-    private CursorAdapter mAdapter;
+    //private CursorAdapter mAdapter;
+    private RecyclerCursorAdapter mAdapter;
     private SearchView mSearchView;
     private boolean mOnFavsScreen;
     private boolean mStartDetailFromFavs;
@@ -47,12 +51,20 @@ public class MainActivity extends AppCompatActivity {
 
         mOnFavsScreen = false;
         mStartDetailFromFavs = false;
-        ListView listView = (ListView) findViewById(R.id.list_view);
+        //ListView listView = (ListView) findViewById(R.id.list_view);
+        RecyclerView recyclerView = (RecyclerView) findViewById(R.id.recycler_view);
         mHelper = PlaceDbOpenHelper.getInstance(MainActivity.this);
 
 
         final Cursor cursor = mHelper.getAllPlaces();
 
+        recyclerView.setHasFixedSize(true);
+        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(MainActivity.this);
+        recyclerView.setLayoutManager(linearLayoutManager);
+        mAdapter = new RecyclerCursorAdapter(MainActivity.this, cursor);
+        recyclerView.setAdapter(mAdapter);
+
+        /*
         mAdapter = new CursorAdapter(MainActivity.this, cursor, 0) { // context, cursor, flags
             @Override
             public View newView(Context context, Cursor cursor, ViewGroup parent) {
@@ -95,6 +107,9 @@ public class MainActivity extends AppCompatActivity {
         //TODO - add an onItemLongClick to launch dialog asking if user wants to fav/unfav the item (as appropriate)
         // if item not yet a favorite, title="Add to favorites?" button icons = heart & X
         // if item already a favorite, title="Remove from favorites?" button icons = trashcan & X
+        */
+
+
     }
 
     @Override

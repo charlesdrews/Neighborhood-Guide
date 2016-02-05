@@ -103,6 +103,20 @@ public class PlaceDbOpenHelper extends SQLiteOpenHelper {
         );
     }
 
+    public Cursor searchFavorites(String query) {
+        //TODO - search more fields, not just title & location
+        SQLiteDatabase db = getReadableDatabase();
+        return db.query(
+                TABLE_PLACES,       // table
+                null,               // columns (null = *)
+                COL_IS_FAVORITE + "=1 AND (" + COL_TITLE + " LIKE ? OR " + COL_LOCATION + " LIKE ?)", // selection: WHERE title LIKE '%query%'
+                new String[]{"%"+query+"%", "%"+query+"%"}, // selectionArgs
+                null,               // group by
+                null,               // having
+                COL_TITLE           // order by
+        );
+    }
+
     public Place getPlace(int placeId) {
         SQLiteDatabase db = getReadableDatabase();
         Cursor cursor = db.query(
@@ -147,15 +161,35 @@ public class PlaceDbOpenHelper extends SQLiteOpenHelper {
         db.execSQL("DELETE FROM " + TABLE_PLACES + " WHERE " + COL_ID + " = " + placeId);
     }
 
-    public void setFavoriteStatus(int placeId, boolean isFavorite) {
+    public boolean isFavoriteById(int id) {
+        SQLiteDatabase db = getReadableDatabase();
+        Cursor cursor = db.query(TABLE_PLACES,      // table
+                new String[]{COL_IS_FAVORITE},      // columns
+                COL_ID + "=?",                      // selection
+                new String[]{String.valueOf(id)},   // selectionArgs
+                null,                               // group by
+                null,                               // having
+                null                                // order by
+        );
+        if (cursor.moveToFirst()) {
+            return (cursor.getInt(cursor.getColumnIndex(COL_IS_FAVORITE)) == 1);
+        } else {
+            return false;
+        }
+    }
+
+    public void setFavoriteStatusById(int id, boolean isFavorite) {
         SQLiteDatabase db = getWritableDatabase();
         //TODO - is it better to user db.update()???
         db.execSQL("UPDATE " + TABLE_PLACES
                 + " SET " + COL_IS_FAVORITE + " = " + (isFavorite ? 1 : 0)
-                + " WHERE " + COL_ID + " = " + placeId);
+                + " WHERE " + COL_ID + " = " + id);
     }
 
     private void initializeDbForTesting(Context context) {
+        //TODO - setup the database in SQLiteBrowswer instead,
+        // save in an assets folder, and set up an OpenAssetHelper class (like Drew did in labs)
+        // also need to add a dependency to Gradle for assets
         SQLiteDatabase db = getWritableDatabase();
         db.execSQL("DELETE FROM " + TABLE_PLACES);
         for (int i = 1; i <= 10; i++) {

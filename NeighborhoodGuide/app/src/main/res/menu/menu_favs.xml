@@ -4,16 +4,15 @@
     tools:context="com.charlesdrews.neighborhoodguide.MainActivity">
 
     <item
-        android:id="@+id/action_search_main"
+        android:id="@+id/action_search_favs"
         android:icon="@drawable/ic_search_white_24dp"
         android:title="@string/action_search"
         app:actionViewClass="android.support.v7.widget.SearchView"
         app:showAsAction="collapseActionView|ifRoom" />
 
     <item
-        android:id="@+id/action_favorites_main"
-        android:icon="@drawable/ic_favorite_white_24dp"
-        android:title="@string/action_favorites"
+        android:id="@+id/action_refresh_favs"
+        android:icon="@drawable/ic_refresh_white_24dp"
+        android:title="@string/action_refresh"
         app:showAsAction="ifRoom" />
-
 </menu>

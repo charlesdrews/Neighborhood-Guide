@@ -3,7 +3,6 @@ package com.charlesdrews.neighborhoodguide;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
-import android.support.v4.app.NavUtils;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.MenuItem;
@@ -22,7 +21,7 @@ public class DetailActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_detail);
 
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar_main);
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
@@ -53,7 +52,7 @@ public class DetailActivity extends AppCompatActivity {
             public void onClick(View view) {
                 boolean isFavorite = !selectedPlace.isFavorite(); // toggle to opposite value
                 selectedPlace.setFavoriteStatus(isFavorite);
-                helper.setFavoriteStatus(mSelectedPlaceId, isFavorite);
+                helper.setFavoriteStatusById(mSelectedPlaceId, isFavorite);
                 setFabFavIcon(fab, isFavorite);
                 if (isFavorite) {
                     mGoBackToFavoritesScreen = true;
@@ -76,6 +75,7 @@ public class DetailActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case android.R.id.home:
+                //TODO - don't need to use this approach, can just return
                 setFavsResult();
                 //NavUtils.navigateUpFromSameTask(this); // this causes MainActivity.onCreate to run; don't want that
                 finish();

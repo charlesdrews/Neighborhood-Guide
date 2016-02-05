@@ -1,0 +1,107 @@
+package com.charlesdrews.neighborhoodguide;
+
+import android.app.SearchManager;
+import android.content.Context;
+import android.database.Cursor;
+import android.os.Bundle;
+import android.support.design.widget.FloatingActionButton;
+import android.support.design.widget.Snackbar;
+import android.support.v4.app.NavUtils;
+import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.SearchView;
+import android.support.v7.widget.Toolbar;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.View;
+
+import com.charlesdrews.neighborhoodguide.places.PlaceDbOpenHelper;
+
+public class FavoritesActivity extends AppCompatActivity {
+    public static final String SELECTED_PLACE_KEY = FavoritesActivity.class.getCanonicalName() + ".selectedPlaceKey";
+    public static final String FROM_FAVORITES_KEY = FavoritesActivity.class.getCanonicalName() + ".fromFavoritesKey";
+    public static final int REQUEST_CODE = 0;
+
+    private PlaceDbOpenHelper mHelper;
+    private RecyclerCursorAdapter mAdapter;
+    private SearchView mSearchView;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_favorites);
+
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar_favs);
+        setSupportActionBar(toolbar);
+        getSupportActionBar().setTitle(R.string.action_favorites);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
+        mHelper = PlaceDbOpenHelper.getInstance(FavoritesActivity.this);
+        final Cursor cursor = mHelper.getFavoritePlaces();
+
+        RecyclerView recyclerView = (RecyclerView) findViewById(R.id.recycler_view_favs);
+        recyclerView.setHasFixedSize(false);
+        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(FavoritesActivity.this);
+        recyclerView.setLayoutManager(linearLayoutManager);
+
+        mAdapter = new RecyclerCursorAdapter(FavoritesActivity.this, cursor);
+        recyclerView.setAdapter(mAdapter);
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_favs, menu);
+
+        SearchManager searchManager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
+        mSearchView = (SearchView) menu.findItem(R.id.action_search_favs).getActionView();
+        mSearchView.setSearchableInfo(searchManager.getSearchableInfo(getComponentName()));
+
+        mSearchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                updateCursorWithSearch(query);
+                return true;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                updateCursorWithSearch(newText);
+                return true;
+            }
+        });
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.action_refresh_favs:
+                updateCursorWithFavorites();
+                Snackbar.make(findViewById(R.id.coordinator_layout_favs), "Favorites refreshed", Snackbar.LENGTH_SHORT);
+                return true;
+
+            case android.R.id.home:
+                NavUtils.navigateUpFromSameTask(this);
+                return true;
+
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        Cursor cursor = mAdapter.getCursor();
+        cursor.close();
+        super.onDestroy();
+    }
+
+    private void updateCursorWithSearch(String query) {
+        mAdapter.changeCursor(mHelper.searchFavorites(query));
+    }
+
+    private void updateCursorWithFavorites() {
+        mAdapter.changeCursor(mHelper.getFavoritePlaces());
+    }
+}

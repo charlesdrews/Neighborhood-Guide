@@ -19,10 +19,6 @@ import android.view.View;
 import com.charlesdrews.neighborhoodguide.places.PlaceDbOpenHelper;
 
 public class FavoritesActivity extends AppCompatActivity {
-    public static final String SELECTED_PLACE_KEY = FavoritesActivity.class.getCanonicalName() + ".selectedPlaceKey";
-    public static final String FROM_FAVORITES_KEY = FavoritesActivity.class.getCanonicalName() + ".fromFavoritesKey";
-    public static final int REQUEST_CODE = 0;
-
     private PlaceDbOpenHelper mHelper;
     private RecyclerCursorAdapter mAdapter;
     private SearchView mSearchView;
@@ -78,7 +74,11 @@ public class FavoritesActivity extends AppCompatActivity {
         switch (item.getItemId()) {
             case R.id.action_refresh_favs:
                 updateCursorWithFavorites();
-                Snackbar.make(findViewById(R.id.coordinator_layout_favs), "Favorites refreshed", Snackbar.LENGTH_SHORT);
+                Snackbar.make(
+                        findViewById(R.id.coordinator_layout_favs),
+                        "Favorites refreshed",
+                        Snackbar.LENGTH_SHORT
+                ).show();
                 return true;
 
             case android.R.id.home:
@@ -88,6 +88,12 @@ public class FavoritesActivity extends AppCompatActivity {
             default:
                 return super.onOptionsItemSelected(item);
         }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        updateCursorWithFavorites();
     }
 
     @Override

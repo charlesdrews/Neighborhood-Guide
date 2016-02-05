@@ -72,34 +72,12 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (resultCode == RESULT_OK) {
-            // RESULT_OK indicates either the user went from favorites to detail and needs to return to favorites,
-            // or user favorited a place and needs to go to favorites
-            //resetToFavoritesScreen();
-        } else {
-            // RESULT_CANCELED indicates user did not go to detail from favorites, and did not favorite a place
-            //resetToHomeScreen();
-            if (!mSearchView.getQuery().toString().isEmpty()) {
-                updateCursorWithSearch(mSearchView.getQuery().toString());
-            }
-        }
-    }
-
-    @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.action_favorites_main:
-                //TODO - start activity to favs
                 Intent intent = new Intent(MainActivity.this, FavoritesActivity.class);
                 startActivity(intent);
                 return true;
-
-            /*
-            case android.R.id.home:
-                return true;
-                */
 
             default:
                 return super.onOptionsItemSelected(item);
@@ -118,26 +96,6 @@ public class MainActivity extends AppCompatActivity {
         cursor.close();
         super.onDestroy();
     }
-
-    /*
-    private void resetToHomeScreen() {
-        getSupportActionBar().setTitle(R.string.title_text);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(false);
-
-        mMenuFavItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
-        mAdapter.changeCursor(mHelper.getAllPlaces()); // refresh adapter w/ all places
-    }
-    */
-
-    /*
-    private void resetToFavoritesScreen() {
-        getSupportActionBar().setTitle(R.string.action_favorites);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-
-        mMenuFavItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER);
-        mAdapter.changeCursor(mHelper.getFavoritePlaces()); // refresh adapter w/ only favorite places
-    }
-    */
 
     private void updateCursorWithSearch(String query) {
         mAdapter.changeCursor(mHelper.searchPlaces(query));

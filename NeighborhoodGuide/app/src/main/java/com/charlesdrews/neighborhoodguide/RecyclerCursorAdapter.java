@@ -6,9 +6,13 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Paint;
 import android.graphics.drawable.Drawable;
+import android.support.design.widget.Snackbar;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
+import android.text.Spannable;
+import android.text.Spanned;
+import android.text.style.StrikethroughSpan;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -24,12 +28,14 @@ import com.charlesdrews.neighborhoodguide.places.PlaceDbOpenHelper;
  */
 public class RecyclerCursorAdapter extends RecyclerView.Adapter<RecyclerCursorAdapter.ViewHolder> {
     private static final String ERR_MSG_ITEM_NOT_FOUND = "Error: item not found";
+    private static final StrikethroughSpan STRIKE_THROUGH_SPAN = new StrikethroughSpan();
 
     private Context mContext;
     private Cursor mCursor;
     private Drawable mFavIcon;
     private Drawable mNonFavIcon;
-    private Drawable mUnFavIcon;
+    private Drawable mRemoveFavIcon;
+    private Drawable mAddFavIcon;
     private boolean mContextIsFavs;
     private PlaceDbOpenHelper mHelper;
 
@@ -54,7 +60,8 @@ public class RecyclerCursorAdapter extends RecyclerView.Adapter<RecyclerCursorAd
         mCursor = cursor;
         mFavIcon = ContextCompat.getDrawable(context, R.drawable.ic_favorite_pink_a200_24dp);
         mNonFavIcon = ContextCompat.getDrawable(context, R.drawable.ic_favorite_border_grey_800_24dp);
-        mUnFavIcon = ContextCompat.getDrawable(context, R.drawable.ic_clear_grey_800_24dp);
+        mRemoveFavIcon = ContextCompat.getDrawable(context, R.drawable.ic_clear_grey_800_24dp);
+        mAddFavIcon = ContextCompat.getDrawable(context, R.drawable.ic_add_grey_800_18dp);
         mContextIsFavs = (context instanceof FavoritesActivity);
         mHelper = PlaceDbOpenHelper.getInstance(context);
     }
@@ -73,8 +80,8 @@ public class RecyclerCursorAdapter extends RecyclerView.Adapter<RecyclerCursorAd
             String title = mCursor.getString(mCursor.getColumnIndex(PlaceDbOpenHelper.COL_TITLE));
             String location = mCursor.getString(mCursor.getColumnIndex(PlaceDbOpenHelper.COL_LOCATION));
 
-            holder.mTitleTextView.setText(title);
-            holder.mLocationTextView.setText(location);
+            holder.mTitleTextView.setText(title, TextView.BufferType.SPANNABLE);
+            holder.mLocationTextView.setText(location, TextView.BufferType.SPANNABLE);
 
             final int id = mCursor.getInt(mCursor.getColumnIndex(PlaceDbOpenHelper.COL_ID));
             boolean isFav = mHelper.isFavoriteById(id);
@@ -99,7 +106,7 @@ public class RecyclerCursorAdapter extends RecyclerView.Adapter<RecyclerCursorAd
                 public void onClick(View v) {
                     Intent intent = new Intent(mContext, DetailActivity.class);
                     intent.putExtra(MainActivity.SELECTED_PLACE_KEY, id);
-                    ((Activity) mContext).startActivityForResult(intent, MainActivity.REQUEST_CODE);
+                    ((Activity) mContext).startActivity(intent);
                 }
             });
         } else {
@@ -144,30 +151,42 @@ public class RecyclerCursorAdapter extends RecyclerView.Adapter<RecyclerCursorAd
         // set icon
         imgView.setImageDrawable(pickIconDrawable(isFav));
 
-        /*
         // set text strikethru if context is favs & item is un-faved, otherwise not strikethru
-        int titleFlags = holder.mTitleTextView.getPaintFlags();
-        int locationFlags = holder.mLocationTextView.getPaintFlags();
+        Spannable titleSpannable = (Spannable) holder.mTitleTextView.getText();
+        Spannable locationSpannable = (Spannable) holder.mLocationTextView.getText();
 
         if (mContextIsFavs & !isFav) {
-            holder.mTitleTextView.setPaintFlags(titleFlags | Paint.STRIKE_THRU_TEXT_FLAG);
-            holder.mLocationTextView.setPaintFlags(locationFlags | Paint.STRIKE_THRU_TEXT_FLAG);
+            titleSpannable.setSpan(STRIKE_THROUGH_SPAN, 0, titleSpannable.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+            locationSpannable.setSpan(STRIKE_THROUGH_SPAN, 0, locationSpannable.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         } else {
-            holder.mTitleTextView.setPaintFlags(titleFlags | ~Paint.STRIKE_THRU_TEXT_FLAG);
-            holder.mLocationTextView.setPaintFlags(locationFlags | ~Paint.STRIKE_THRU_TEXT_FLAG);
+            titleSpannable.removeSpan(STRIKE_THROUGH_SPAN);
+            locationSpannable.removeSpan(STRIKE_THROUGH_SPAN);
         }
-        */
+
+        // launch a Toast to notify user of success
+        View rootView;
+        if (mContextIsFavs) {
+            rootView = ((Activity) mContext).findViewById(R.id.coordinator_layout_favs);
+        } else {
+            rootView = ((Activity) mContext).findViewById(R.id.coordinator_layout_main);
+        }
+        String msg = holder.mTitleTextView.getText().toString() + (isFav ? " favorited" : " unfavorited");
+        Snackbar.make(rootView, msg, Snackbar.LENGTH_SHORT).show();
     }
 
     private Drawable pickIconDrawable(boolean isFav) {
         if (isFav) {
             if (mContextIsFavs) {
-                return mUnFavIcon;
+                return mRemoveFavIcon;
             } else {
                 return mFavIcon;
             }
         } else {
-            return mNonFavIcon;
+            if (mContextIsFavs) {
+                return mAddFavIcon;
+            } else {
+                return mNonFavIcon;
+            }
         }
     }
 }

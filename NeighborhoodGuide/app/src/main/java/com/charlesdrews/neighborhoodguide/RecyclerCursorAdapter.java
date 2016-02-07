@@ -76,6 +76,7 @@ public class RecyclerCursorAdapter extends RecyclerView.Adapter<RecyclerCursorAd
     @Override
     public void onBindViewHolder(final ViewHolder holder, final int position) {
         if (mCursor.moveToPosition(position)) {
+            holder.mCardView.setCardBackgroundColor(ContextCompat.getColor(mContext, R.color.cardBg));
 
             String title = mCursor.getString(mCursor.getColumnIndex(PlaceDbOpenHelper.COL_TITLE));
             String location = mCursor.getString(mCursor.getColumnIndex(PlaceDbOpenHelper.COL_LOCATION));

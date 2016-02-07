@@ -22,6 +22,7 @@ public class PlaceDbOpenHelper extends SQLiteOpenHelper {
     public static final String COL_IS_FAVORITE = "is_favorite";
     public static final String COL_RATING = "rating";
     public static final String COL_IMAGE = "image";
+    public static final String COL_NOTE = "note";
 
     private static final String SQL_DROP_PLACES_TABLE = "DROP TABLE IF EXISTS " + TABLE_NAME_PLACES;
     private static final String SQL_CREATE_PLACES_TABLE =
@@ -33,7 +34,8 @@ public class PlaceDbOpenHelper extends SQLiteOpenHelper {
                     + COL_DESCRIPTION + " TEXT, "
                     + COL_IS_FAVORITE + " INTEGER, "
                     + COL_RATING + " REAL, "
-                    + COL_IMAGE + " BLOB)";
+                    + COL_IMAGE + " BLOB, "
+                    + COL_NOTE + " TEXT)";
 
     private static PlaceDbOpenHelper mInstance;
 
@@ -126,27 +128,26 @@ public class PlaceDbOpenHelper extends SQLiteOpenHelper {
                 null,               // having
                 null                // order by
         );
-        cursor.moveToFirst();
-        if (cursor.getCount() == 0) {
-            cursor.close();
-            return null;
-        } else {
+        if (cursor.moveToFirst()) {
             String title = cursor.getString(cursor.getColumnIndex(COL_TITLE));
             String location = cursor.getString(cursor.getColumnIndex(COL_LOCATION));
             String neighborhood = cursor.getString(cursor.getColumnIndex(COL_NEIGHBORHOOD));
             String description = cursor.getString(cursor.getColumnIndex(COL_DESCRIPTION));
             Boolean isFavorite = (cursor.getInt(cursor.getColumnIndex(COL_IS_FAVORITE)) == 1);
             Float rating = cursor.getFloat(cursor.getColumnIndex(COL_RATING));
+            String note = cursor.getString(cursor.getColumnIndex(COL_NOTE));
 
             cursor.close();
-            return new Place(title, location, neighborhood, description, isFavorite, rating);
+            return new Place(id, title, location, neighborhood, description, isFavorite, rating, note);
+        } else {
+            cursor.close();
+            return null;
         }
     }
 
-    public void insertPlace(String title, String location, String neighborhood,
-                            String description, boolean isFavorite, float rating)
+    public void insertPlace(String title, String location, String neighborhood, String description,
+                            boolean isFavorite, float rating, String note)
     {
-        SQLiteDatabase db = getWritableDatabase();
         ContentValues values = new ContentValues();
         values.put(COL_TITLE, title);
         values.put(COL_LOCATION, location);
@@ -154,6 +155,9 @@ public class PlaceDbOpenHelper extends SQLiteOpenHelper {
         values.put(COL_DESCRIPTION, description);
         values.put(COL_IS_FAVORITE, (isFavorite ? 1 : 0));
         values.put(COL_RATING, rating);
+        values.put(COL_NOTE, note);
+
+        SQLiteDatabase db = getWritableDatabase();
         db.insert(TABLE_NAME_PLACES, null, values);
     }
 
@@ -196,6 +200,26 @@ public class PlaceDbOpenHelper extends SQLiteOpenHelper {
 
         ContentValues values = new ContentValues();
         values.put(COL_RATING, rating);
+
+        SQLiteDatabase db = getWritableDatabase();
+        db.update(TABLE_NAME_PLACES, values, COL_ID + " = ?", new String[]{String.valueOf(id)});
+    }
+
+    public String getNoteById(int id) {
+        SQLiteDatabase db = getReadableDatabase();
+        Cursor cursor = db.query(
+                TABLE_NAME_PLACES,      // table
+                new String[]{COL_NOTE}, // columns
+                COL_ID + " = ?",        // selection
+                new String[]{String.valueOf(id)}, // selectionArgs
+                null, null, null, null  // group by, having, order by, limit
+        );
+        return cursor.getString(cursor.getColumnIndex(COL_NOTE));
+    }
+
+    public void setNoteById(int id, String note) {
+        ContentValues values = new ContentValues();
+        values.put(COL_NOTE, note);
 
         SQLiteDatabase db = getWritableDatabase();
         db.update(TABLE_NAME_PLACES, values, COL_ID + " = ?", new String[]{String.valueOf(id)});

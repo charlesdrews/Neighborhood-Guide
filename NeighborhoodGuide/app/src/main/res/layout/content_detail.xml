@@ -37,10 +37,32 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
 
+        <View
+            android:background="@color/detailStatusBar"
+            android:layout_marginTop="@dimen/detail_div_margin"
+            android:layout_marginBottom="@dimen/detail_div_margin"
+            android:layout_width="match_parent"
+            android:layout_height="1dp" />
+
+        <TextView
+            android:id="@+id/detail_note"
+            android:text="@string/detail_msg_click_to_add_note"
+            android:hint="Enter your note here"
+            android:textAppearance="?android:attr/textAppearanceSmall"
+            android:textStyle="italic"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <View
+            android:background="@color/detailStatusBar"
+            android:layout_marginTop="@dimen/detail_div_margin"
+            android:layout_marginBottom="@dimen/detail_div_margin"
+            android:layout_width="match_parent"
+            android:layout_height="1dp" />
+
         <TextView
             android:id="@+id/detail_description"
             android:textAppearance="?android:attr/textAppearanceSmall"
-            android:layout_marginTop="@dimen/text_margin"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/large_text" />

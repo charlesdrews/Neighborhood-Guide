@@ -4,7 +4,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
-import android.support.v4.app.NavUtils;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -12,6 +11,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.RatingBar;
 import android.widget.TextView;
 
 import com.charlesdrews.neighborhoodguide.places.Place;
@@ -34,21 +34,20 @@ public class DetailActivity extends AppCompatActivity {
 
         if (mSelectedPlaceId >= 0) {
 
-            TextView locationView = (TextView) findViewById(R.id.detail_location);
-            TextView neighborhoodView = (TextView) findViewById(R.id.detail_neighborhood);
-            TextView descriptionView = (TextView) findViewById(R.id.detail_description);
-
             final PlaceDbOpenHelper helper = PlaceDbOpenHelper.getInstance(DetailActivity.this);
-            final Place selectedPlace = helper.getPlace(mSelectedPlaceId);
+            final Place selectedPlace = helper.getPlaceById(mSelectedPlaceId);
 
             getSupportActionBar().setTitle(selectedPlace.getTitle());
 
+            TextView locationView = (TextView) findViewById(R.id.detail_location);
             String locationText = "Location: " + selectedPlace.getLocation();
             locationView.setText(locationText);
 
+            TextView neighborhoodView = (TextView) findViewById(R.id.detail_neighborhood);
             String neighborhoodText = "Neighborhood: " + selectedPlace.getNeighborhood();
             neighborhoodView.setText(neighborhoodText);
 
+            TextView descriptionView = (TextView) findViewById(R.id.detail_description);
             descriptionView.setText(selectedPlace.getDescription());
 
             final FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
@@ -68,6 +67,23 @@ public class DetailActivity extends AppCompatActivity {
                     }
                 }
             });
+
+            RatingBar ratingBar = (RatingBar) findViewById(R.id.detail_rating_bar);
+            ratingBar.setRating(selectedPlace.getRating());
+
+            ratingBar.setOnRatingBarChangeListener(new RatingBar.OnRatingBarChangeListener() {
+                @Override
+                public void onRatingChanged(RatingBar ratingBar, float rating, boolean fromUser) {
+                    selectedPlace.setRating(rating);
+                    helper.setRatingById(mSelectedPlaceId, rating);
+                    Snackbar.make(
+                            findViewById(R.id.coordinator_layout_detail),
+                            "Your rating of " + rating + " stars was saved for " + selectedPlace.getTitle(),
+                            Snackbar.LENGTH_SHORT
+                    ).show();
+                }
+            });
+
         } else {
             TextView locationView = (TextView) findViewById(R.id.detail_location);
             locationView.setText(getString(R.string.err_msg_item_not_found));

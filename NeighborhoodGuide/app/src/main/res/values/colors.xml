@@ -14,7 +14,7 @@
 
     <color name="detailStatusBar">#00796B</color>
     <color name="detailToolbarBg">#009688</color>
-    <color name="detailBodyBg">#E0F2F1</color>
+    <color name="detailBodyBg">#FFFFFF</color>
 
     <color name="colorPrimary">#3F51B5</color>
     <color name="colorPrimaryDark">#000000</color>

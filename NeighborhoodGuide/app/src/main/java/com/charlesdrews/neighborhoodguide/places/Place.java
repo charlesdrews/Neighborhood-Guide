@@ -9,15 +9,17 @@ public class Place {
     private String mNeighborhood;
     private String mDescription;
     private boolean mIsFavorite;
+    private float mRating;
 
     public Place (String title, String location, String neighborhood,
-                  String description, boolean isFavorite)
+                  String description, boolean isFavorite, float rating)
     {
         mTitle = title;
         mLocation = location;
         mNeighborhood = neighborhood;
         mDescription = description;
         mIsFavorite = isFavorite;
+        mRating = rating;
     }
 
     public String getTitle() {
@@ -42,5 +44,13 @@ public class Place {
 
     public void setFavoriteStatus(boolean isFavorite) {
         mIsFavorite = isFavorite;
+    }
+
+    public float getRating() {
+        return mRating;
+    }
+
+    public void setRating(float rating) {
+        mRating = rating;
     }
 }

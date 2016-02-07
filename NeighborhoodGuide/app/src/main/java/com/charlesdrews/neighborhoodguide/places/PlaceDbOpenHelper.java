@@ -6,8 +6,6 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
-import com.charlesdrews.neighborhoodguide.R;
-
 /**
  * Created by charlie on 2/2/16.
  */
@@ -22,6 +20,8 @@ public class PlaceDbOpenHelper extends SQLiteOpenHelper {
     public static final String COL_NEIGHBORHOOD = "neighborhood";
     public static final String COL_DESCRIPTION = "description";
     public static final String COL_IS_FAVORITE = "is_favorite";
+    public static final String COL_RATING = "rating";
+    public static final String COL_IMAGE = "image";
 
     private static final String SQL_DROP_PLACES_TABLE = "DROP TABLE IF EXISTS " + TABLE_NAME_PLACES;
     private static final String SQL_CREATE_PLACES_TABLE =
@@ -31,7 +31,9 @@ public class PlaceDbOpenHelper extends SQLiteOpenHelper {
                     + COL_LOCATION + " TEXT, "
                     + COL_NEIGHBORHOOD + " TEXT, "
                     + COL_DESCRIPTION + " TEXT, "
-                    + COL_IS_FAVORITE + " INTEGER)";
+                    + COL_IS_FAVORITE + " INTEGER, "
+                    + COL_RATING + " REAL, "
+                    + COL_IMAGE + " BLOB)";
 
     private static PlaceDbOpenHelper mInstance;
 
@@ -113,13 +115,13 @@ public class PlaceDbOpenHelper extends SQLiteOpenHelper {
         );
     }
 
-    public Place getPlace(int placeId) {
+    public Place getPlaceById(int id) {
         SQLiteDatabase db = getReadableDatabase();
         Cursor cursor = db.query(
                 TABLE_NAME_PLACES,       // table
                 null,               // columns (null = *)
                 COL_ID + " = ?",    // selection: WHERE _id = ?
-                new String[]{String.valueOf(placeId)}, // selectionArgs: WHERE _id = id
+                new String[]{String.valueOf(id)}, // selectionArgs: WHERE _id = id
                 null,               // group by
                 null,               // having
                 null                // order by
@@ -133,14 +135,16 @@ public class PlaceDbOpenHelper extends SQLiteOpenHelper {
             String location = cursor.getString(cursor.getColumnIndex(COL_LOCATION));
             String neighborhood = cursor.getString(cursor.getColumnIndex(COL_NEIGHBORHOOD));
             String description = cursor.getString(cursor.getColumnIndex(COL_DESCRIPTION));
-            int isFavorite = cursor.getInt(cursor.getColumnIndex(COL_IS_FAVORITE));
+            Boolean isFavorite = (cursor.getInt(cursor.getColumnIndex(COL_IS_FAVORITE)) == 1);
+            Float rating = cursor.getFloat(cursor.getColumnIndex(COL_RATING));
+
             cursor.close();
-            return new Place(title, location, neighborhood, description, (isFavorite == 1));
+            return new Place(title, location, neighborhood, description, isFavorite, rating);
         }
     }
 
     public void insertPlace(String title, String location, String neighborhood,
-                            String description, boolean isFavorite)
+                            String description, boolean isFavorite, float rating)
     {
         SQLiteDatabase db = getWritableDatabase();
         ContentValues values = new ContentValues();
@@ -149,13 +153,13 @@ public class PlaceDbOpenHelper extends SQLiteOpenHelper {
         values.put(COL_NEIGHBORHOOD, neighborhood);
         values.put(COL_DESCRIPTION, description);
         values.put(COL_IS_FAVORITE, (isFavorite ? 1 : 0));
+        values.put(COL_RATING, rating);
         db.insert(TABLE_NAME_PLACES, null, values);
     }
 
-    public void deletePlace(int placeId) {
+    public void deletePlaceById(int id) {
         SQLiteDatabase db = getWritableDatabase();
-        //TODO - see if there's a method rather than use raw sql
-        db.execSQL("DELETE FROM " + TABLE_NAME_PLACES + " WHERE " + COL_ID + " = " + placeId);
+        db.delete(TABLE_NAME_PLACES, COL_ID + " = ?", new String[]{String.valueOf(id)});
     }
 
     public boolean isFavoriteById(int id) {
@@ -176,10 +180,24 @@ public class PlaceDbOpenHelper extends SQLiteOpenHelper {
     }
 
     public void setFavoriteStatusById(int id, boolean isFavorite) {
+        ContentValues values = new ContentValues();
+        values.put(COL_IS_FAVORITE, isFavorite);
+
         SQLiteDatabase db = getWritableDatabase();
-        //TODO - use update instead
-        db.execSQL("UPDATE " + TABLE_NAME_PLACES
-                + " SET " + COL_IS_FAVORITE + " = " + (isFavorite ? 1 : 0)
-                + " WHERE " + COL_ID + " = " + id);
+        db.update(TABLE_NAME_PLACES, values, COL_ID + " = ?", new String[]{String.valueOf(id)});
+    }
+
+    public void setRatingById(int id, float rating) {
+        if (rating < 0.0) {
+            rating = (float) 0.0;
+        } else if (rating > 5.0) {
+            rating = (float) 5.0;
+        }
+
+        ContentValues values = new ContentValues();
+        values.put(COL_RATING, rating);
+
+        SQLiteDatabase db = getWritableDatabase();
+        db.update(TABLE_NAME_PLACES, values, COL_ID + " = ?", new String[]{String.valueOf(id)});
     }
 }

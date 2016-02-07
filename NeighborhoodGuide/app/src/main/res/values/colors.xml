@@ -5,6 +5,7 @@
     <color name="mainBodyBg">#ECEFF1</color>
 
     <color name="cardBg">#FFFFFF</color>
+    <color name="cardUnFavedBg">#E0E0E0</color>
 
     <color name="favsStatusBar">#C2185B</color>
     <color name="favsToolbarBg">#E91E63</color>

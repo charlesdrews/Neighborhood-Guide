@@ -14,8 +14,7 @@
 
     <LinearLayout
         android:orientation="vertical"
-        android:layout_gravity="left"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
         <TextView
@@ -30,12 +29,15 @@
             android:text="location"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
+
     </LinearLayout>
 
     <ImageView
         android:id="@+id/card_fav_icon"
-        android:layout_gravity="right|top"
+        android:contentDescription="fav_icon"
+        android:layout_gravity="end|top"
         android:src="@drawable/ic_favorite_border_grey_800_24dp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content" />
+
 </android.support.v7.widget.CardView>

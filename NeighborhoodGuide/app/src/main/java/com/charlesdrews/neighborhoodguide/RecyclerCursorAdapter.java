@@ -60,8 +60,8 @@ public class RecyclerCursorAdapter extends RecyclerView.Adapter<RecyclerCursorAd
         mCursor = cursor;
         mFavIcon = ContextCompat.getDrawable(context, R.drawable.ic_favorite_pink_a200_24dp);
         mNonFavIcon = ContextCompat.getDrawable(context, R.drawable.ic_favorite_border_grey_800_24dp);
-        mRemoveFavIcon = ContextCompat.getDrawable(context, R.drawable.ic_clear_grey_800_24dp);
-        mAddFavIcon = ContextCompat.getDrawable(context, R.drawable.ic_add_grey_800_18dp);
+        mRemoveFavIcon = ContextCompat.getDrawable(context, R.drawable.ic_remove_circle_outline_grey_800_24dp);
+        mAddFavIcon = ContextCompat.getDrawable(context, R.drawable.ic_add_circle_outline_grey_800_24dp);
         mContextIsFavs = (context instanceof FavoritesActivity);
         mHelper = PlaceDbOpenHelper.getInstance(context);
     }
@@ -106,7 +106,7 @@ public class RecyclerCursorAdapter extends RecyclerView.Adapter<RecyclerCursorAd
                 public void onClick(View v) {
                     Intent intent = new Intent(mContext, DetailActivity.class);
                     intent.putExtra(MainActivity.SELECTED_PLACE_KEY, id);
-                    ((Activity) mContext).startActivity(intent);
+                    mContext.startActivity(intent);
                 }
             });
         } else {
@@ -152,15 +152,20 @@ public class RecyclerCursorAdapter extends RecyclerView.Adapter<RecyclerCursorAd
         imgView.setImageDrawable(pickIconDrawable(isFav));
 
         // set text strikethru if context is favs & item is un-faved, otherwise not strikethru
+        // also set card background to same grey as recyclerview background
         Spannable titleSpannable = (Spannable) holder.mTitleTextView.getText();
         Spannable locationSpannable = (Spannable) holder.mLocationTextView.getText();
 
         if (mContextIsFavs & !isFav) {
             titleSpannable.setSpan(STRIKE_THROUGH_SPAN, 0, titleSpannable.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
             locationSpannable.setSpan(STRIKE_THROUGH_SPAN, 0, locationSpannable.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+            //holder.mCardView.setCardBackgroundColor(R.color.favsBodyBg);
+            holder.mCardView.setCardBackgroundColor(ContextCompat.getColor(mContext, R.color.cardUnFavedBg));
         } else {
             titleSpannable.removeSpan(STRIKE_THROUGH_SPAN);
             locationSpannable.removeSpan(STRIKE_THROUGH_SPAN);
+            //holder.mCardView.setCardBackgroundColor(R.color.cardBg);
+            holder.mCardView.setCardBackgroundColor(ContextCompat.getColor(mContext, R.color.cardBg));
         }
 
         // launch a Toast to notify user of success

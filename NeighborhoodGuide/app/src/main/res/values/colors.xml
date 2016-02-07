@@ -1,12 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <color name="mainStatusBar">#455A64</color>
+    <color name="mainToolbarBg">#607D8B</color>
+    <color name="mainBodyBg">#ECEFF1</color>
+
+    <color name="cardBg">#FFFFFF</color>
+
+    <color name="favsStatusBar">#C2185B</color>
+    <color name="favsToolbarBg">#E91E63</color>
+    <color name="favsBodyBg">#F5F5F5</color>
+    <color name="favsAccent">#FF4081</color>
+
+    <color name="detailStatusBar">#00796B</color>
+    <color name="detailToolbarBg">#009688</color>
+    <color name="detailBodyBg">#E0F2F1</color>
+
     <color name="colorPrimary">#3F51B5</color>
-    <color name="colorPrimaryDark">#303F9F</color>
+    <color name="colorPrimaryDark">#000000</color>
     <color name="colorAccent">#FF4081</color>
-    <color name="colorBlack">#000000</color>
-    <color name="colorGrey800">#424242</color>
-    <color name="colorWhite">#ffffff</color>
-    <color name="colorGrey50">#fafafa</color>
-    <color name="colorGrey100">#f5f5f5</color>
-    <color name="colorGrey200">#eeeeee</color>
 </resources>

@@ -1,13 +1,17 @@
 package com.charlesdrews.neighborhoodguide;
 
+import android.os.Build;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.NavUtils;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.TextView;
 
 import com.charlesdrews.neighborhoodguide.places.Place;
@@ -24,6 +28,7 @@ public class DetailActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar_main);
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        setStatusBarColor(R.color.detailStatusBar);
 
         mSelectedPlaceId = getIntent().getExtras().getInt(MainActivity.SELECTED_PLACE_KEY, -1);
 
@@ -86,6 +91,15 @@ public class DetailActivity extends AppCompatActivity {
             fab.setImageResource(R.drawable.ic_favorite_white_24dp); // filled in heart if favorite
         } else {
             fab.setImageResource(R.drawable.ic_favorite_border_white_24dp); // otherwise just outline
+        }
+    }
+
+    private void setStatusBarColor(int colorResource) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            Window window = DetailActivity.this.getWindow();
+            window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+            window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
+            window.setStatusBarColor(ContextCompat.getColor(DetailActivity.this, colorResource));
         }
     }
 }

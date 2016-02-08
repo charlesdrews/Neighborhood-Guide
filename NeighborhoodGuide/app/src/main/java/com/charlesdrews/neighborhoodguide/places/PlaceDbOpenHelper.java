@@ -17,6 +17,9 @@ public class PlaceDbOpenHelper extends SQLiteOpenHelper {
     private static final String DATABASE_NAME = "places.db";
     private static final int DATABASE_VERSION = 1;
 
+    private static final String ALL_CATEGORIES = "All";
+    private static final String UNCATEGORIZED = "Uncategorized";
+
     public static final String TABLE_NAME_PLACES = "places";
     public static final String COL_ID = "_id";
     public static final String COL_TITLE = "title";
@@ -70,6 +73,12 @@ public class PlaceDbOpenHelper extends SQLiteOpenHelper {
         onCreate(db);
     }
 
+    /**
+     * Queries the db for places based on isFavorite status and category
+     * @param favoritesOnly - boolean status for desired results
+     * @param category - value to be used to constrain results (can be null)
+     * @return - a Cursor of db query results
+     */
     private Cursor getPlaces(boolean favoritesOnly, String category) {
         StringBuilder selectionStrBuilder = new StringBuilder();
         ArrayList<String> selectionArgsList = new ArrayList<>();
@@ -78,12 +87,17 @@ public class PlaceDbOpenHelper extends SQLiteOpenHelper {
             selectionStrBuilder.append(COL_IS_FAVORITE + "=1");
         }
 
-        if (category != null && !category.equals("All")) {
+        if (category != null && !category.equals(ALL_CATEGORIES)) {
             if (selectionStrBuilder.length() > 0) {
                 selectionStrBuilder.append(" AND ");
             }
-            selectionStrBuilder.append(COL_CATEGORY + "=?");
-            selectionArgsList.add(category);
+
+            if (category.equals(UNCATEGORIZED)) {
+                selectionStrBuilder.append(COL_CATEGORY + " IS NULL");
+            } else {
+                selectionStrBuilder.append(COL_CATEGORY + "=?");
+                selectionArgsList.add(category);
+            }
         }
 
         String selection = selectionStrBuilder.toString();
@@ -206,28 +220,48 @@ public class PlaceDbOpenHelper extends SQLiteOpenHelper {
         }
     }
 
-    public void insertPlace(String title, String location, String neighborhood, String category,
-                            String description, boolean isFavorite, float rating, String note)
-    {
+    /**
+     * Inserts a Place object into the database
+     * @param place - Place object to be inserted
+     * @return true if Place inserted successfully, false otherwise
+     */
+    public boolean insertPlace(Place place) {
         ContentValues values = new ContentValues();
-        values.put(COL_TITLE, title);
-        values.put(COL_LOCATION, location);
-        values.put(COL_NEIGHBORHOOD, neighborhood);
-        values.put(COL_CATEGORY, category);
-        values.put(COL_DESCRIPTION, description);
-        values.put(COL_IS_FAVORITE, (isFavorite ? 1 : 0));
-        values.put(COL_RATING, rating);
-        values.put(COL_NOTE, note);
+        values.put(COL_TITLE, place.getTitle());
+        values.put(COL_LOCATION, place.getLocation());
+        values.put(COL_NEIGHBORHOOD, place.getNeighborhood());
+        values.put(COL_CATEGORY, place.getCategory());
+        values.put(COL_DESCRIPTION, place.getDescription());
+        values.put(COL_IS_FAVORITE, (place.isFavorite() ? 1 : 0));
+        values.put(COL_RATING, place.getRating());
+        values.put(COL_NOTE, place.getNote());
 
         SQLiteDatabase db = getWritableDatabase();
-        db.insert(TABLE_NAME_PLACES, null, values);
+        long newRowId = db.insert(TABLE_NAME_PLACES, null, values);
+
+        return (newRowId != -1); // true if OK, false if error and db.insert returned -1
     }
 
-    public void deletePlaceById(int id) {
+    /**
+     * Deletes the specified Place from the database
+     * @param id - uniqe ID of the Place to be deleted
+     * @return - true if db updated, false otherwise
+     */
+    public boolean deletePlaceById(int id) {
         SQLiteDatabase db = getWritableDatabase();
-        db.delete(TABLE_NAME_PLACES, COL_ID + "=?", new String[]{String.valueOf(id)});
+        int rowsAffected = db.delete(
+                TABLE_NAME_PLACES,
+                COL_ID + "=?",
+                new String[]{String.valueOf(id)}
+        );
+        return (rowsAffected > 0);
     }
 
+    /**
+     * Get a list of category values present in the database for use in category spinner
+     * (list will also include "All" at head of list and "Uncategorized" at tail of list)
+     * @return - ArrayList of Strings
+     */
     public ArrayList<String> getCategories() {
         SQLiteDatabase db = getReadableDatabase();
         Cursor cursor = db.query(
@@ -251,8 +285,8 @@ public class PlaceDbOpenHelper extends SQLiteOpenHelper {
             Collections.sort(categories);
         }
 
-        categories.add(0, "All");        // first item
-        categories.add("Uncategorized"); // last item
+        categories.add(0, ALL_CATEGORIES);  // add'l item a start of list
+        categories.add(UNCATEGORIZED);      // add'l item at end of list
 
         cursor.close();
         return categories;
@@ -273,7 +307,7 @@ public class PlaceDbOpenHelper extends SQLiteOpenHelper {
         if (cursor.moveToFirst()) {
             category = cursor.getString(cursor.getColumnIndex(COL_CATEGORY));
         }
-        db.close();
+        cursor.close();
         return category;
     }
 
@@ -295,15 +329,33 @@ public class PlaceDbOpenHelper extends SQLiteOpenHelper {
         return isFav;
     }
 
-    public void setFavoriteStatusById(int id, boolean isFavorite) {
+    /**
+     * Sets the isFavorite status for the specified Place
+     * @param id - unique id of the Place to be updated
+     * @param isFavorite - boolean status to be set
+     * @return true if db updated, false otherwise
+     */
+    public boolean setFavoriteStatusById(int id, boolean isFavorite) {
         ContentValues values = new ContentValues();
         values.put(COL_IS_FAVORITE, isFavorite);
 
         SQLiteDatabase db = getWritableDatabase();
-        db.update(TABLE_NAME_PLACES, values, COL_ID + " = ?", new String[]{String.valueOf(id)});
+        int rowsAffected = db.update(
+                TABLE_NAME_PLACES,
+                values,
+                COL_ID + " = ?",
+                new String[]{String.valueOf(id)}
+        );
+        return (rowsAffected > 0);
     }
 
-    public void setRatingById(int id, float rating) {
+    /**
+     * Sets the rating for the specified Place
+     * @param id - unique id of the Place to be updated
+     * @param rating - value to be set
+     * @return true if db updated, false otherwise
+     */
+    public boolean setRatingById(int id, float rating) {
         if (rating < 0.0) {
             rating = (float) 0.0;
         } else if (rating > 5.0) {
@@ -314,7 +366,13 @@ public class PlaceDbOpenHelper extends SQLiteOpenHelper {
         values.put(COL_RATING, rating);
 
         SQLiteDatabase db = getWritableDatabase();
-        db.update(TABLE_NAME_PLACES, values, COL_ID + "=?", new String[]{String.valueOf(id)});
+        int rowsAffected = db.update(
+                TABLE_NAME_PLACES,
+                values,
+                COL_ID + "=?",
+                new String[]{String.valueOf(id)}
+        );
+        return (rowsAffected > 0);
     }
 
     public String getNoteById(int id) {
@@ -326,18 +384,32 @@ public class PlaceDbOpenHelper extends SQLiteOpenHelper {
                 new String[]{String.valueOf(id)}, // selectionArgs
                 null, null, null, null  // group by, having, order by, limit
         );
+
+        String note = null;
         if (cursor.moveToFirst()) {
-            return cursor.getString(cursor.getColumnIndex(COL_NOTE));
-        } else {
-            return null;
+            note = cursor.getString(cursor.getColumnIndex(COL_NOTE));
         }
+        cursor.close();
+        return note;
     }
 
-    public void setNoteById(int id, String note) {
+    /**
+     * Sets the note for the specified Place
+     * @param id - unique id of the Place to be updated
+     * @param note - value to be set
+     * @return true if db updated, false otherwise
+     */
+    public boolean setNoteById(int id, String note) {
         ContentValues values = new ContentValues();
         values.put(COL_NOTE, note);
 
         SQLiteDatabase db = getWritableDatabase();
-        db.update(TABLE_NAME_PLACES, values, COL_ID + " = ?", new String[]{String.valueOf(id)});
+        int rowsAffected = db.update(
+                TABLE_NAME_PLACES,
+                values,
+                COL_ID + " = ?",
+                new String[]{String.valueOf(id)}
+        );
+        return (rowsAffected > 0);
     }
 }

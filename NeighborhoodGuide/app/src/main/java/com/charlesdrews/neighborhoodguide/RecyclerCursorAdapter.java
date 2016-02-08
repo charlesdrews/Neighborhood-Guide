@@ -39,7 +39,6 @@ public class RecyclerCursorAdapter extends RecyclerView.Adapter<RecyclerCursorAd
     private boolean mContextIsFavs;
     private PlaceDbOpenHelper mHelper;
 
-    //TODO - can I make this inner class private?
     public static class ViewHolder extends RecyclerView.ViewHolder {
         public CardView mCardView;
         public TextView mTitleTextView;
@@ -147,37 +146,42 @@ public class RecyclerCursorAdapter extends RecyclerView.Adapter<RecyclerCursorAd
     private void onIconImgViewClick(ViewHolder holder, ImageView imgView, int id) {
         // get isFavorite status of item
         boolean isFav = mHelper.isFavoriteById(id);
+        String msg;
 
         // toggle isFavorite status in database (and local indicator)
-        mHelper.setFavoriteStatusById(id, !isFav);
-        isFav = !isFav;
+        if (mHelper.setFavoriteStatusById(id, !isFav)) {
+            isFav = !isFav;
 
-        // set icon
-        imgView.setImageDrawable(pickIconDrawable(isFav));
+            // set icon
+            imgView.setImageDrawable(pickIconDrawable(isFav));
 
-        // set text strikethru if context is favs & item is un-faved, otherwise not strikethru
-        // also set card background to same grey as recyclerview background
-        Spannable titleSpannable = (Spannable) holder.mTitleTextView.getText();
-        Spannable overviewSpannable = (Spannable) holder.mOverviewTextView.getText();
+            // set text strikethru if context is favs & item is un-faved, otherwise not strikethru
+            // also set card background to same grey as recyclerview background
+            Spannable titleSpannable = (Spannable) holder.mTitleTextView.getText();
+            Spannable overviewSpannable = (Spannable) holder.mOverviewTextView.getText();
 
-        if (mContextIsFavs & !isFav) {
-            titleSpannable.setSpan(STRIKE_THROUGH_SPAN, 0, titleSpannable.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-            overviewSpannable.setSpan(STRIKE_THROUGH_SPAN, 0, overviewSpannable.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-            holder.mCardView.setCardBackgroundColor(ContextCompat.getColor(mContext, R.color.cardUnFavedBg));
+            if (mContextIsFavs & !isFav) {
+                titleSpannable.setSpan(STRIKE_THROUGH_SPAN, 0, titleSpannable.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                overviewSpannable.setSpan(STRIKE_THROUGH_SPAN, 0, overviewSpannable.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                holder.mCardView.setCardBackgroundColor(ContextCompat.getColor(mContext, R.color.cardUnFavedBg));
+            } else {
+                titleSpannable.removeSpan(STRIKE_THROUGH_SPAN);
+                overviewSpannable.removeSpan(STRIKE_THROUGH_SPAN);
+                holder.mCardView.setCardBackgroundColor(ContextCompat.getColor(mContext, R.color.cardBg));
+            }
+
+            msg = holder.mTitleTextView.getText().toString() + (isFav ? " favorited" : " unfavorited");
         } else {
-            titleSpannable.removeSpan(STRIKE_THROUGH_SPAN);
-            overviewSpannable.removeSpan(STRIKE_THROUGH_SPAN);
-            holder.mCardView.setCardBackgroundColor(ContextCompat.getColor(mContext, R.color.cardBg));
+            msg = DetailActivity.ERR_MSG_FAVORITE_STATUS_NOT_SAVED;
         }
 
-        // launch a Snackbar to notify user of success
+        // launch a Snackbar to notify user of success/failure
         View rootView;
         if (mContextIsFavs) {
             rootView = ((Activity) mContext).findViewById(R.id.coordinator_layout_favs);
         } else {
             rootView = ((Activity) mContext).findViewById(R.id.coordinator_layout_main);
         }
-        String msg = holder.mTitleTextView.getText().toString() + (isFav ? " favorited" : " unfavorited");
         Snackbar.make(rootView, msg, Snackbar.LENGTH_SHORT).show();
     }
 

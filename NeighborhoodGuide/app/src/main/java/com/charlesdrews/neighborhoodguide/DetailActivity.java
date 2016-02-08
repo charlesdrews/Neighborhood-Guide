@@ -23,6 +23,10 @@ import com.charlesdrews.neighborhoodguide.places.Place;
 import com.charlesdrews.neighborhoodguide.places.PlaceDbOpenHelper;
 
 public class DetailActivity extends AppCompatActivity {
+    private static final String ERR_MSG_RATING_NOT_SAVED = "Database error: your rating was not saved";
+    public static final String ERR_MSG_FAVORITE_STATUS_NOT_SAVED = "Database error: favorite status not saved";
+    public static final String ERR_MSG_NOTE_NOT_SAVED = "Database error: your note was not saved";
+
     private int mSelectedPlaceId;
     private PlaceDbOpenHelper mHelper;
     private TextView mNoteView;
@@ -79,10 +83,17 @@ public class DetailActivity extends AppCompatActivity {
                 @Override
                 public void onRatingChanged(RatingBar ratingBar, float rating, boolean fromUser) {
                     selectedPlace.setRating(rating);
-                    mHelper.setRatingById(mSelectedPlaceId, rating);
+                    String msg;
+
+                    if (mHelper.setRatingById(mSelectedPlaceId, rating)) {
+                        msg = "Your rating of " + rating + " stars was saved for "
+                                + selectedPlace.getTitle();
+                    } else {
+                        msg = ERR_MSG_RATING_NOT_SAVED;
+                    }
                     Snackbar.make(
                             findViewById(R.id.coordinator_layout_detail),
-                            "Your rating of " + rating + " stars was saved for " + selectedPlace.getTitle(),
+                            msg,
                             Snackbar.LENGTH_SHORT
                     ).show();
                 }
@@ -96,13 +107,19 @@ public class DetailActivity extends AppCompatActivity {
                 public void onClick(View view) {
                     boolean isFavorite = !selectedPlace.isFavorite(); // toggle to opposite value
                     selectedPlace.setFavoriteStatus(isFavorite);
-                    mHelper.setFavoriteStatusById(mSelectedPlaceId, isFavorite);
-                    setFabFavIcon(fab, isFavorite);
-                    if (isFavorite) {
-                        Snackbar.make(view, selectedPlace.getTitle() + " favorited", Snackbar.LENGTH_SHORT).show();
+                    String msg;
+
+                    if (mHelper.setFavoriteStatusById(mSelectedPlaceId, isFavorite)) {
+                        setFabFavIcon(fab, isFavorite);
+                        if (isFavorite) {
+                            msg = selectedPlace.getTitle() + " favorited";
+                        } else {
+                            msg = selectedPlace.getTitle() + " unfavorited";
+                        }
                     } else {
-                        Snackbar.make(view, selectedPlace.getTitle() + " unfavorited", Snackbar.LENGTH_SHORT).show();
+                        msg = ERR_MSG_FAVORITE_STATUS_NOT_SAVED;
                     }
+                    Snackbar.make(view, msg, Snackbar.LENGTH_SHORT).show();
                 }
             });
 
@@ -151,7 +168,7 @@ public class DetailActivity extends AppCompatActivity {
             builder.setTitle("Edit your note");
         }
 
-        if (mNoteDraft.isEmpty()) {
+        if (mNoteDraft == null || mNoteDraft.isEmpty()) {
             input.setText(place.getNote());
         } else {
             input.setText(mNoteDraft);
@@ -184,22 +201,27 @@ public class DetailActivity extends AppCompatActivity {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 String note = input.getText().toString();
+                String msg;
 
                 place.setNote(note);
-                mHelper.setNoteById(place.getId(), note);
-
-                if (note.isEmpty()) {
-                    mNoteView.setText(getString(R.string.detail_msg_click_to_add_note));
+                if (mHelper.setNoteById(place.getId(), note)) {
+                    if (note.isEmpty()) {
+                        mNoteView.setText(getString(R.string.detail_msg_click_to_add_note));
+                    } else {
+                        note = "Your note: " + note;
+                        mNoteView.setText(note);
+                    }
+                    msg = "Your note was saved to " + place.getTitle();
                 } else {
-                    note = "Your note: " + note;
-                    mNoteView.setText(note);
+                    msg = ERR_MSG_NOTE_NOT_SAVED;
                 }
 
                 dialog.dismiss();
                 Snackbar.make(
                         findViewById(R.id.coordinator_layout_detail),
-                        "Your note was saved to " + place.getTitle(),
-                        Snackbar.LENGTH_SHORT).show();
+                        msg,
+                        Snackbar.LENGTH_SHORT
+                ).show();
             }
         });
 

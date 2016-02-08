@@ -19,14 +19,14 @@
 
         <TextView
             android:id="@+id/card_place_title"
-            android:text="title"
+            android:text="@string/card_title"
             android:textStyle="bold"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
 
         <TextView
             android:id="@+id/card_place_overview"
-            android:text="location"
+            android:text="@string/card_overview"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
 
@@ -34,7 +34,7 @@
 
     <ImageView
         android:id="@+id/card_fav_icon"
-        android:contentDescription="fav_icon"
+        android:contentDescription="@string/card_fav_icon_description"
         android:layout_gravity="end|top"
         android:src="@drawable/ic_favorite_border_grey_800_24dp"
         android:layout_width="wrap_content"

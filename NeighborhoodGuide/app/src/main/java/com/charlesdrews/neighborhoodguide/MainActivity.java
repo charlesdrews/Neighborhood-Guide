@@ -47,7 +47,7 @@ public class MainActivity extends AppCompatActivity implements OnConnectionFaile
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        //TODO
+        //TODO - figure out maps api
         mGoogleApiClient = new GoogleApiClient
                 .Builder(this)
                 .addApi(Places.GEO_DATA_API)

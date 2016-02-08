@@ -26,11 +26,17 @@ import android.widget.Spinner;
 import com.charlesdrews.neighborhoodguide.places.PlaceDbAssetHelper;
 import com.charlesdrews.neighborhoodguide.places.PlaceDbOpenHelper;
 
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.GoogleApiClient.OnConnectionFailedListener;
+import com.google.android.gms.location.places.Places;
+
 import java.util.ArrayList;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements OnConnectionFailedListener {
     public static final String SELECTED_PLACE_KEY = MainActivity.class.getCanonicalName() + ".selectedPlaceKey";
 
+    private GoogleApiClient mGoogleApiClient;
     private Menu mMenu;
     private PlaceDbOpenHelper mHelper;
     private RecyclerCursorAdapter mAdapter;
@@ -40,6 +46,14 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        //TODO
+        mGoogleApiClient = new GoogleApiClient
+                .Builder(this)
+                .addApi(Places.GEO_DATA_API)
+                .addApi(Places.PLACE_DETECTION_API)
+                .enableAutoManage(this, this)
+                .build();
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar_main);
         setSupportActionBar(toolbar);
@@ -121,7 +135,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void updateCursorWithSearch(String query) {
-        mAdapter.changeCursor(mHelper.searchPlaces(query));
+        mAdapter.changeCursor(mHelper.searchAllPlaces(query));
     }
 
     private void setStatusBarColor(int colorResource) {
@@ -180,7 +194,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setFilter() {
-        mAdapter.changeCursor(mHelper.getAllPlacesFilteredByCategory(mCategoryFilterValue));
+        mAdapter.changeCursor(mHelper.getAllPlacesByCategory(mCategoryFilterValue));
 
         if (mCategoryFilterValue.equals("All")) {
             mMenu.findItem(R.id.action_filter_main).setIcon(R.drawable.ic_filter_list_white_18dp);
@@ -192,5 +206,11 @@ public class MainActivity extends AppCompatActivity {
     private void clearFilter() {
         mAdapter.changeCursor(mHelper.getAllPlaces());
         mMenu.findItem(R.id.action_filter_main).setIcon(R.drawable.ic_filter_list_white_18dp);
+    }
+
+    @Override
+    public void onConnectionFailed(ConnectionResult connectionResult) {
+        //TODO - implement something to handle connection failures
+        //https://developers.google.com/android/guides/api-client#HandlingFailures
     }
 }

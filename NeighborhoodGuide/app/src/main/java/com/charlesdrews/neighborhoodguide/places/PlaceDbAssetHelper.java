@@ -1,11 +1,11 @@
 package com.charlesdrews.neighborhoodguide.places;
 
 import android.content.Context;
-import android.database.sqlite.SQLiteDatabase;
 
 import com.readystatesoftware.sqliteasset.SQLiteAssetHelper;
 
 /**
+ * Provides access to the database places.db saved in the assets/databases directory
  * Created by charlie on 2/6/16.
  */
 public class PlaceDbAssetHelper extends SQLiteAssetHelper {

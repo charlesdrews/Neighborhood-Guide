@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 
 /**
+ * Provides access to the table "places" in the database places.db
  * Created by charlie on 2/2/16.
  */
 public class PlaceDbOpenHelper extends SQLiteOpenHelper {
@@ -27,6 +28,9 @@ public class PlaceDbOpenHelper extends SQLiteOpenHelper {
     public static final String COL_RATING = "rating";
     public static final String COL_IMAGE = "image";
     public static final String COL_NOTE = "note";
+
+    private static final String[] SEARCH_RESULT_COLUMNS = new String[]{
+            COL_ID, COL_TITLE, COL_CATEGORY, COL_LOCATION, COL_NEIGHBORHOOD, COL_IS_FAVORITE};
 
     private static final String SQL_DROP_PLACES_TABLE = "DROP TABLE IF EXISTS " + TABLE_NAME_PLACES;
     private static final String SQL_CREATE_PLACES_TABLE =
@@ -66,79 +70,96 @@ public class PlaceDbOpenHelper extends SQLiteOpenHelper {
         onCreate(db);
     }
 
-    public Cursor getAllPlaces() {
-        SQLiteDatabase db = getReadableDatabase();
-        //TODO - return only columns needed, not all columns
-        return db.query(
-                TABLE_NAME_PLACES,  // table
-                null,               // columns (null = *)
-                null,               // selection (WHERE clause)
-                null,               // selectionArgs
-                null,               // group by
-                null,               // having
-                COL_TITLE,          // order by
-                null                // limit
-        );
-    }
+    private Cursor getPlaces(boolean favoritesOnly, String category) {
+        StringBuilder selectionStrBuilder = new StringBuilder();
+        ArrayList<String> selectionArgsList = new ArrayList<>();
 
-    public Cursor getAllPlacesFilteredByCategory(String category) {
-        String selection = COL_CATEGORY + " = ?";
-        String[] selectionArgs = new String[]{category};
+        if (favoritesOnly) {
+            selectionStrBuilder.append(COL_IS_FAVORITE + "=1");
+        }
 
-        if (category.equals("All")) {
-            return getAllPlaces();
-        } else if (category.equals("Uncategorized")) {
-            selection = COL_CATEGORY + " IS NULL";
+        if (category != null && !category.equals("All")) {
+            if (selectionStrBuilder.length() > 0) {
+                selectionStrBuilder.append(" AND ");
+            }
+            selectionStrBuilder.append(COL_CATEGORY + "=?");
+            selectionArgsList.add(category);
+        }
+
+        String selection = selectionStrBuilder.toString();
+        String[] selectionArgs;
+        if (selectionArgsList.size() > 0) {
+            selectionArgs = new String[selectionArgsList.size()];
+            selectionArgs = selectionArgsList.toArray(selectionArgs);
+        } else {
             selectionArgs = null;
         }
 
         SQLiteDatabase db = getReadableDatabase();
-        //TODO - return only columns needed, not all columns
         return db.query(
-                TABLE_NAME_PLACES,
-                null,                   // columns (return all)
-                selection,
-                selectionArgs,
+                TABLE_NAME_PLACES,      // table
+                SEARCH_RESULT_COLUMNS,  // columns
+                selection,              // selection
+                selectionArgs,          // selectionArgs
                 null,                   // group by
                 null,                   // having
                 COL_TITLE,              // order by
                 null                    // limit
         );
+    }
+
+    public Cursor getAllPlaces() {
+        return getPlaces(false, null);
+    }
+
+    public Cursor getAllPlacesByCategory(String category) {
+        return getPlaces(false, category);
     }
 
     public Cursor getFavoritePlaces() {
-        SQLiteDatabase db = getReadableDatabase();
-        //TODO - return only columns needed, not all columns
-        return db.query(
-                TABLE_NAME_PLACES,  // table
-                null,               // columns (null = *)
-                COL_IS_FAVORITE + " = 1", // selection: WHERE is_favorite = 1
-                null,               // selectionArgs (hardcoded in selection)
-                null,               // group by
-                null,               // having
-                COL_TITLE,          // order by
-                null                // limit
-        );
+        return getPlaces(true, null);
     }
 
-    public Cursor getFavoritePlacesFilteredByCategory(String category) {
-        String selection = COL_IS_FAVORITE + " = 1 AND " + COL_CATEGORY + " = ?";
-        String[] selectionArgs = new String[]{category};
+    public Cursor getFavoritePlacesByCategory(String category) {
+        return getPlaces(true, category);
+    }
 
-        if (category.equals("All")) {
-            return getFavoritePlaces();
-        } else if (category.equals("Uncategorized")) {
-            selection = COL_IS_FAVORITE + " = 1 AND " + COL_CATEGORY + " IS NULL";
-            selectionArgs = null;
+    private Cursor searchPlaces(String query, boolean favoritesOnly) {
+        String[] queryTokens = query.split(" ");
+
+        StringBuilder selectionStrBuilder = new StringBuilder();
+        ArrayList<String> selectionArgsList = new ArrayList<>();
+
+        selectionStrBuilder.append("(" + COL_TITLE + " LIKE ? OR "+ COL_LOCATION + " LIKE ? OR "
+                + COL_NEIGHBORHOOD + " LIKE ?)");
+        selectionArgsList.add("%" + queryTokens[0] + "%");
+        selectionArgsList.add("%" + queryTokens[0] + "%");
+        selectionArgsList.add("%" + queryTokens[0] + "%");
+
+        if (queryTokens.length > 1) {
+            for (int i = 1; i < queryTokens.length; i++) {
+                selectionStrBuilder.append(" AND (" + COL_TITLE + " LIKE ? OR " + COL_LOCATION
+                        + " LIKE ? OR " + COL_NEIGHBORHOOD + " LIKE ?)");
+                selectionArgsList.add("%" + queryTokens[i] + "%");
+                selectionArgsList.add("%" + queryTokens[i] + "%");
+                selectionArgsList.add("%" + queryTokens[i] + "%");
+            }
         }
 
+        if (favoritesOnly) {
+            selectionStrBuilder.append(" AND " + COL_IS_FAVORITE + "=1");
+        }
+
+        String selection = selectionStrBuilder.toString();
+        String[] selectionArgs = new String[selectionArgsList.size()];
+        selectionArgs = selectionArgsList.toArray(selectionArgs);
+
         SQLiteDatabase db = getReadableDatabase();
-        //TODO - return only columns needed, not all columns
         return db.query(
                 TABLE_NAME_PLACES,      // table
-                null,                   // columns (null = *)
-                selection,
-                selectionArgs,
+                SEARCH_RESULT_COLUMNS,  // columns
+                selection,              // selection
+                selectionArgs,          // selectionArgs
                 null,                   // group by
                 null,                   // having
                 COL_TITLE,              // order by
@@ -146,44 +167,25 @@ public class PlaceDbOpenHelper extends SQLiteOpenHelper {
         );
     }
 
-    public Cursor searchPlaces(String query) {
-        //TODO - search more fields, not just title & location
-        SQLiteDatabase db = getReadableDatabase();
-        return db.query(
-                TABLE_NAME_PLACES,       // table
-                null,               // columns (null = *)
-                COL_TITLE + " LIKE ? OR " + COL_LOCATION + " LIKE ?", // selection: WHERE title LIKE '%query%'
-                new String[]{"%"+query+"%", "%"+query+"%"}, // selectionArgs
-                null,               // group by
-                null,               // having
-                COL_TITLE           // order by
-        );
+    public Cursor searchAllPlaces(String query) {
+        return searchPlaces(query, false);
     }
 
-    public Cursor searchFavorites(String query) {
-        //TODO - search more fields, not just title & location
-        SQLiteDatabase db = getReadableDatabase();
-        return db.query(
-                TABLE_NAME_PLACES,       // table
-                null,               // columns (null = *)
-                COL_IS_FAVORITE + "=1 AND (" + COL_TITLE + " LIKE ? OR " + COL_LOCATION + " LIKE ?)", // selection: WHERE title LIKE '%query%'
-                new String[]{"%"+query+"%", "%"+query+"%"}, // selectionArgs
-                null,               // group by
-                null,               // having
-                COL_TITLE           // order by
-        );
+    public Cursor searchFavoritePlaces(String query) {
+        return searchPlaces(query, true);
     }
 
     public Place getPlaceById(int id) {
         SQLiteDatabase db = getReadableDatabase();
         Cursor cursor = db.query(
-                TABLE_NAME_PLACES,       // table
+                TABLE_NAME_PLACES,  // table
                 null,               // columns (null = *)
-                COL_ID + " = ?",    // selection: WHERE _id = ?
+                COL_ID + "=?",      // selection: WHERE _id = ?
                 new String[]{String.valueOf(id)}, // selectionArgs: WHERE _id = id
                 null,               // group by
                 null,               // having
-                null                // order by
+                null,               // order by
+                "1"                 // limit
         );
         if (cursor.moveToFirst()) {
             String title = cursor.getString(cursor.getColumnIndex(COL_TITLE));
@@ -223,7 +225,7 @@ public class PlaceDbOpenHelper extends SQLiteOpenHelper {
 
     public void deletePlaceById(int id) {
         SQLiteDatabase db = getWritableDatabase();
-        db.delete(TABLE_NAME_PLACES, COL_ID + " = ?", new String[]{String.valueOf(id)});
+        db.delete(TABLE_NAME_PLACES, COL_ID + "=?", new String[]{String.valueOf(id)});
     }
 
     public ArrayList<String> getCategories() {
@@ -240,7 +242,7 @@ public class PlaceDbOpenHelper extends SQLiteOpenHelper {
                 null
         );
 
-        ArrayList<String> categories = new ArrayList<String>();
+        ArrayList<String> categories = new ArrayList<>();
         if (cursor.moveToFirst()) {
             while (!cursor.isAfterLast()) {
                 categories.add(cursor.getString(cursor.getColumnIndex(COL_CATEGORY)));
@@ -257,6 +259,8 @@ public class PlaceDbOpenHelper extends SQLiteOpenHelper {
     }
 
     public String getCategoryById(int id) {
+        String category = null;
+
         SQLiteDatabase db = getReadableDatabase();
         Cursor cursor = db.query(TABLE_NAME_PLACES, // table
                 new String[]{COL_CATEGORY},         // columns
@@ -267,10 +271,10 @@ public class PlaceDbOpenHelper extends SQLiteOpenHelper {
                 null                                // order by
         );
         if (cursor.moveToFirst()) {
-            return cursor.getString(cursor.getColumnIndex(COL_CATEGORY));
-        } else {
-            return null;
+            category = cursor.getString(cursor.getColumnIndex(COL_CATEGORY));
         }
+        db.close();
+        return category;
     }
 
     public boolean isFavoriteById(int id) {
@@ -310,7 +314,7 @@ public class PlaceDbOpenHelper extends SQLiteOpenHelper {
         values.put(COL_RATING, rating);
 
         SQLiteDatabase db = getWritableDatabase();
-        db.update(TABLE_NAME_PLACES, values, COL_ID + " = ?", new String[]{String.valueOf(id)});
+        db.update(TABLE_NAME_PLACES, values, COL_ID + "=?", new String[]{String.valueOf(id)});
     }
 
     public String getNoteById(int id) {

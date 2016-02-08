@@ -43,14 +43,14 @@ public class RecyclerCursorAdapter extends RecyclerView.Adapter<RecyclerCursorAd
     public static class ViewHolder extends RecyclerView.ViewHolder {
         public CardView mCardView;
         public TextView mTitleTextView;
-        public TextView mLocationTextView;
+        public TextView mOverviewTextView;
         public ImageView mIconImgView;
 
         public ViewHolder(View itemView) {
             super(itemView);
             mCardView = (CardView) itemView.findViewById(R.id.card_place);
             mTitleTextView = (TextView) itemView.findViewById(R.id.card_place_title);
-            mLocationTextView = (TextView) itemView.findViewById(R.id.card_place_detail);
+            mOverviewTextView = (TextView) itemView.findViewById(R.id.card_place_overview);
             mIconImgView = (ImageView) itemView.findViewById(R.id.card_fav_icon);
         }
     }
@@ -79,13 +79,16 @@ public class RecyclerCursorAdapter extends RecyclerView.Adapter<RecyclerCursorAd
             holder.mCardView.setCardBackgroundColor(ContextCompat.getColor(mContext, R.color.cardBg));
 
             String title = mCursor.getString(mCursor.getColumnIndex(PlaceDbOpenHelper.COL_TITLE));
-            String location = mCursor.getString(mCursor.getColumnIndex(PlaceDbOpenHelper.COL_LOCATION));
-
             holder.mTitleTextView.setText(title, TextView.BufferType.SPANNABLE);
-            holder.mLocationTextView.setText(location, TextView.BufferType.SPANNABLE);
+
+            String overview = mCursor.getString(mCursor.getColumnIndex(PlaceDbOpenHelper.COL_CATEGORY))
+                    + " | " + mCursor.getString(mCursor.getColumnIndex(PlaceDbOpenHelper.COL_LOCATION))
+                    + " | " + mCursor.getString(mCursor.getColumnIndex(PlaceDbOpenHelper.COL_NEIGHBORHOOD));
+
+            holder.mOverviewTextView.setText(overview, TextView.BufferType.SPANNABLE);
 
             final int id = mCursor.getInt(mCursor.getColumnIndex(PlaceDbOpenHelper.COL_ID));
-            boolean isFav = mHelper.isFavoriteById(id);
+            boolean isFav = (mCursor.getInt(mCursor.getColumnIndex(PlaceDbOpenHelper.COL_IS_FAVORITE)) == 1);
             holder.mIconImgView.setImageDrawable(pickIconDrawable(isFav));
 
             holder.mIconImgView.setOnTouchListener(new View.OnTouchListener() {
@@ -155,21 +158,19 @@ public class RecyclerCursorAdapter extends RecyclerView.Adapter<RecyclerCursorAd
         // set text strikethru if context is favs & item is un-faved, otherwise not strikethru
         // also set card background to same grey as recyclerview background
         Spannable titleSpannable = (Spannable) holder.mTitleTextView.getText();
-        Spannable locationSpannable = (Spannable) holder.mLocationTextView.getText();
+        Spannable overviewSpannable = (Spannable) holder.mOverviewTextView.getText();
 
         if (mContextIsFavs & !isFav) {
             titleSpannable.setSpan(STRIKE_THROUGH_SPAN, 0, titleSpannable.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-            locationSpannable.setSpan(STRIKE_THROUGH_SPAN, 0, locationSpannable.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-            //holder.mCardView.setCardBackgroundColor(R.color.favsBodyBg);
+            overviewSpannable.setSpan(STRIKE_THROUGH_SPAN, 0, overviewSpannable.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
             holder.mCardView.setCardBackgroundColor(ContextCompat.getColor(mContext, R.color.cardUnFavedBg));
         } else {
             titleSpannable.removeSpan(STRIKE_THROUGH_SPAN);
-            locationSpannable.removeSpan(STRIKE_THROUGH_SPAN);
-            //holder.mCardView.setCardBackgroundColor(R.color.cardBg);
+            overviewSpannable.removeSpan(STRIKE_THROUGH_SPAN);
             holder.mCardView.setCardBackgroundColor(ContextCompat.getColor(mContext, R.color.cardBg));
         }
 
-        // launch a Toast to notify user of success
+        // launch a Snackbar to notify user of success
         View rootView;
         if (mContextIsFavs) {
             rootView = ((Activity) mContext).findViewById(R.id.coordinator_layout_favs);

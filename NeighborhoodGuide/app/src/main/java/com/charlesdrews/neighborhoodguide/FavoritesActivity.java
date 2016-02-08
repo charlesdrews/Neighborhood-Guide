@@ -123,7 +123,7 @@ public class FavoritesActivity extends AppCompatActivity {
     }
 
     private void updateCursorWithSearch(String query) {
-        mAdapter.changeCursor(mHelper.searchFavorites(query));
+        mAdapter.changeCursor(mHelper.searchFavoritePlaces(query));
     }
 
     private void updateCursorWithFavorites() {
@@ -186,7 +186,7 @@ public class FavoritesActivity extends AppCompatActivity {
     }
 
     private void setFilter() {
-        mAdapter.changeCursor(mHelper.getFavoritePlacesFilteredByCategory(mCategoryFilterValue));
+        mAdapter.changeCursor(mHelper.getFavoritePlacesByCategory(mCategoryFilterValue));
 
         if (mCategoryFilterValue.equals("All")) {
             mMenu.findItem(R.id.action_filter_favs).setIcon(R.drawable.ic_filter_list_white_18dp);

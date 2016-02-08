@@ -4,7 +4,6 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
-import android.graphics.Paint;
 import android.graphics.drawable.Drawable;
 import android.support.design.widget.Snackbar;
 import android.support.v4.content.ContextCompat;
@@ -50,7 +49,7 @@ public class RecyclerCursorAdapter extends RecyclerView.Adapter<RecyclerCursorAd
             super(itemView);
             mCardView = (CardView) itemView.findViewById(R.id.card_place);
             mTitleTextView = (TextView) itemView.findViewById(R.id.card_place_title);
-            mLocationTextView = (TextView) itemView.findViewById(R.id.card_place_location);
+            mLocationTextView = (TextView) itemView.findViewById(R.id.card_place_detail);
             mIconImgView = (ImageView) itemView.findViewById(R.id.card_fav_icon);
         }
     }

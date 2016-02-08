@@ -23,6 +23,7 @@ import com.charlesdrews.neighborhoodguide.places.PlaceDbOpenHelper;
 
 
 /**
+ * Implements an Adapter for a RecyclerView based on data from a Cursor
  * Created by charlie on 2/4/16.
  */
 public class RecyclerCursorAdapter extends RecyclerView.Adapter<RecyclerCursorAdapter.ViewHolder> {

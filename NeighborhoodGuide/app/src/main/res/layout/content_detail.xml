@@ -23,17 +23,10 @@
             android:layout_height="wrap_content" />
 
         <TextView
-            android:id="@+id/detail_location"
-            android:text="location"
-            android:textAppearance="?android:attr/textAppearanceMedium"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
-
-        <TextView
-            android:id="@+id/detail_neighborhood"
-            android:text="neighborhood"
-            android:textAppearance="?android:attr/textAppearanceMedium"
-            android:layout_marginTop="@dimen/text_margin"
+            android:id="@+id/detail_overview"
+            android:text="@string/detail_overview"
+            android:textAppearance="?android:attr/textAppearanceSmall"
+            android:textStyle="bold"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
 
@@ -47,7 +40,7 @@
         <TextView
             android:id="@+id/detail_note"
             android:text="@string/detail_msg_click_to_add_note"
-            android:hint="Enter your note here"
+            android:hint="@string/detail_hint_add_note"
             android:textAppearance="?android:attr/textAppearanceSmall"
             android:textStyle="italic"
             android:layout_width="wrap_content"

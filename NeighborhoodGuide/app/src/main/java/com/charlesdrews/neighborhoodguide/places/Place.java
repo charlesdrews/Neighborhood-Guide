@@ -1,9 +1,7 @@
 package com.charlesdrews.neighborhoodguide.places;
 
-import java.util.ArrayList;
-import java.util.Collections;
-
 /**
+ * Models a Place object representing a physical location in the real world
  * Created by charlie on 2/2/16.
  */
 public class Place {

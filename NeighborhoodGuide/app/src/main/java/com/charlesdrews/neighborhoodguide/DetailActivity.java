@@ -35,7 +35,9 @@ public class DetailActivity extends AppCompatActivity {
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar_main);
         setSupportActionBar(toolbar);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        }
         setStatusBarColor(R.color.detailStatusBar);
 
         mSelectedPlaceId = getIntent().getExtras().getInt(MainActivity.SELECTED_PLACE_KEY, -1);
@@ -47,13 +49,11 @@ public class DetailActivity extends AppCompatActivity {
 
             getSupportActionBar().setTitle(selectedPlace.getTitle());
 
-            TextView locationView = (TextView) findViewById(R.id.detail_location);
-            String locationText = "Location: " + selectedPlace.getLocation();
-            locationView.setText(locationText);
-
-            TextView neighborhoodView = (TextView) findViewById(R.id.detail_neighborhood);
-            String neighborhoodText = "Neighborhood: " + selectedPlace.getNeighborhood();
-            neighborhoodView.setText(neighborhoodText);
+            TextView overviewView = (TextView) findViewById(R.id.detail_overview);
+            String overviewText = selectedPlace.getCategory() + " | "
+                    + selectedPlace.getLocation() + " | "
+                    + selectedPlace.getNeighborhood();
+            overviewView.setText(overviewText);
 
             mNoteView = (TextView) findViewById(R.id.detail_note);
             if (selectedPlace.getNote().isEmpty()) {
@@ -107,7 +107,7 @@ public class DetailActivity extends AppCompatActivity {
             });
 
         } else {
-            TextView locationView = (TextView) findViewById(R.id.detail_location);
+            TextView locationView = (TextView) findViewById(R.id.detail_overview);
             locationView.setText(getString(R.string.err_msg_item_not_found));
         }
     }
@@ -191,7 +191,8 @@ public class DetailActivity extends AppCompatActivity {
                 if (note.isEmpty()) {
                     mNoteView.setText(getString(R.string.detail_msg_click_to_add_note));
                 } else {
-                    mNoteView.setText("Your note: " + note);
+                    note = "Your note: " + note;
+                    mNoteView.setText(note);
                 }
 
                 dialog.dismiss();

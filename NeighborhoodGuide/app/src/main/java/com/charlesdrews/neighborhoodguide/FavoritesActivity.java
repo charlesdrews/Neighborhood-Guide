@@ -34,7 +34,8 @@ public class FavoritesActivity extends AppCompatActivity {
     private PlaceDbOpenHelper mHelper;
     private RecyclerCursorAdapter mAdapter;
     private String mCategoryFilterValue;
-    private String mSearchQuery;
+    private String mUserQuery;
+    private boolean mMenuLoading = true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,7 +67,7 @@ public class FavoritesActivity extends AppCompatActivity {
         // retrieve saved instance state values (if any)
         if (savedInstanceState != null) {
             mCategoryFilterValue = savedInstanceState.getString(MainActivity.CATEGORY_FILTER_VALUE_KEY); // might return null
-            mSearchQuery = savedInstanceState.getString(MainActivity.SEARCH_QUERY_KEY); // might return null
+            mUserQuery = savedInstanceState.getString(MainActivity.SEARCH_QUERY_KEY); // might return null
         }
     }
 
@@ -82,19 +83,27 @@ public class FavoritesActivity extends AppCompatActivity {
         mSearchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
-                if (!query.isEmpty()) {
-                    mSearchQuery = query;
+                if (!mMenuLoading) {
+                    if (query.isEmpty()) {
+                        mUserQuery = null;
+                    } else {
+                        mUserQuery = query;
+                    }
                 }
-                updateCursorWithSearch(query);
+                changeAdapterCursor();
                 return true;
             }
 
             @Override
             public boolean onQueryTextChange(String newText) {
-                if (!newText.isEmpty()) {
-                    mSearchQuery = newText;
+                if (!mMenuLoading) {
+                    if (newText.isEmpty()) {
+                        mUserQuery = null;
+                    } else {
+                        mUserQuery = newText;
+                    }
                 }
-                updateCursorWithSearch(newText);
+                changeAdapterCursor();
                 return true;
             }
         });
@@ -102,33 +111,23 @@ public class FavoritesActivity extends AppCompatActivity {
         mSearchView.setOnCloseListener(new SearchView.OnCloseListener() {
             @Override
             public boolean onClose() {
-                mSearchQuery = null;
+                mUserQuery = null;
+                changeAdapterCursor();
                 return true;
             }
         });
 
         // once menu is set up, incorporate pre-existing filter & query values if present
-        incorporateSavedFilterAndQueryValues();
-
-        return true;
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        //incorporateSavedFilterAndQueryValues();
-    }
-
-    private void incorporateSavedFilterAndQueryValues() {
-        if (mCategoryFilterValue != null && mSearchQuery == null) {
-            setFilter();
-        } else if (mSearchQuery != null) {
+        if (mUserQuery != null) {
             MenuItemCompat.expandActionView(mMenu.findItem(R.id.action_search_favs));
-            //((SearchView) mMenu.findItem(R.id.action_search_favs).getActionView()).setQuery(mSearchQuery, false);
-            ((SearchView) findViewById(R.id.action_search_favs)).setQuery(mSearchQuery, false);
-        } else {
-            mAdapter.changeCursor(mHelper.getFavoritePlaces());
+            ((SearchView) findViewById(R.id.action_search_favs)).setQuery(mUserQuery, false);
+            changeAdapterCursor();
+        } else if (mCategoryFilterValue != null) {
+            changeAdapterCursor();
         }
+
+        mMenuLoading = false;
+        return true;
     }
 
     @Override
@@ -139,7 +138,7 @@ public class FavoritesActivity extends AppCompatActivity {
                 return true;
 
             case R.id.action_refresh_favs:
-                updateCursorWithFavorites();
+                changeAdapterCursor();
                 Snackbar.make(
                         findViewById(R.id.coordinator_layout_favs),
                         "Favorites refreshed",
@@ -162,8 +161,8 @@ public class FavoritesActivity extends AppCompatActivity {
         if (mCategoryFilterValue != null) {
             outState.putString(MainActivity.CATEGORY_FILTER_VALUE_KEY, mCategoryFilterValue);
         }
-        if (mSearchQuery != null) {
-            outState.putString(MainActivity.SEARCH_QUERY_KEY, mSearchQuery);
+        if (mUserQuery != null) {
+            outState.putString(MainActivity.SEARCH_QUERY_KEY, mUserQuery);
         }
     }
 
@@ -172,22 +171,6 @@ public class FavoritesActivity extends AppCompatActivity {
         Cursor cursor = mAdapter.getCursor();
         cursor.close();
         super.onDestroy();
-    }
-
-    private void updateCursorWithSearch(String query) {
-        if (mCategoryFilterValue == null) {
-            mAdapter.changeCursor(mHelper.searchFavoritePlaces(query));
-        } else {
-            mAdapter.changeCursor(mHelper.searchFavoritePlacesByCategory(query, mCategoryFilterValue));
-        }
-    }
-
-    private void updateCursorWithFavorites() {
-        if (mSearchQuery == null) {
-            mAdapter.changeCursor(mHelper.getFavoritePlaces());
-        } else {
-            mAdapter.changeCursor(mHelper.searchFavoritePlaces(mSearchQuery));
-        }
     }
 
     private void setStatusBarColor(int colorResource) {
@@ -228,7 +211,10 @@ public class FavoritesActivity extends AppCompatActivity {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 mCategoryFilterValue = spinner.getSelectedItem().toString();
-                setFilter();
+                if (mCategoryFilterValue.equals("All")) {
+                    mCategoryFilterValue = null;
+                }
+                changeAdapterCursor();
                 dialog.dismiss();
             }
         });
@@ -237,7 +223,7 @@ public class FavoritesActivity extends AppCompatActivity {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 mCategoryFilterValue = null;
-                clearFilter();
+                changeAdapterCursor();
                 dialog.dismiss();
             }
         });
@@ -245,22 +231,30 @@ public class FavoritesActivity extends AppCompatActivity {
         builder.show();
     }
 
-    private void setFilter() {
-        if (mSearchQuery != null) {
-            mAdapter.changeCursor(mHelper.searchFavoritePlacesByCategory(mSearchQuery, mCategoryFilterValue));
-        } else {
+    private void changeAdapterCursor() {
+        if (mCategoryFilterValue != null && mUserQuery != null) {
+
+            mAdapter.changeCursor(mHelper.searchFavoritePlacesByCategory(mUserQuery, mCategoryFilterValue));
+
+        } else if (mCategoryFilterValue != null) { // && mUserQuery == null
+
             mAdapter.changeCursor(mHelper.getFavoritePlacesByCategory(mCategoryFilterValue));
+
+        } else if (mUserQuery != null) { // && mCategoryFilterValue == null
+
+            mAdapter.changeCursor(mHelper.searchFavoritePlaces(mUserQuery));
+
+        } else { // mCategoryFilterValue == null && mUserQuery == null
+
+            mAdapter.changeCursor(mHelper.getFavoritePlaces());
+
         }
 
-        if (mCategoryFilterValue.equals("All")) {
-            mMenu.findItem(R.id.action_filter_favs).setIcon(R.drawable.ic_filter_list_white_18dp);
-        } else {
+        if (mCategoryFilterValue != null && !mCategoryFilterValue.equals("All")) {
             mMenu.findItem(R.id.action_filter_favs).setIcon(R.drawable.ic_filter_list_cyan_a200_18dp);
-        }
-    }
+        } else {
 
-    private void clearFilter() {
-        mAdapter.changeCursor(mHelper.getFavoritePlaces());
-        mMenu.findItem(R.id.action_filter_favs).setIcon(R.drawable.ic_filter_list_white_18dp);
+            mMenu.findItem(R.id.action_filter_favs).setIcon(R.drawable.ic_filter_list_white_18dp);
+        }
     }
 }

@@ -38,7 +38,8 @@ public class MainActivity extends AppCompatActivity {
     private PlaceDbOpenHelper mHelper;
     private RecyclerCursorAdapter mAdapter;
     private String mCategoryFilterValue;
-    private String mSearchQuery;
+    private String mUserQuery;
+    private boolean mMenuLoading = true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -73,7 +74,7 @@ public class MainActivity extends AppCompatActivity {
         // retrieve saved instance state values (if any)
         if (savedInstanceState != null) {
             mCategoryFilterValue = savedInstanceState.getString(CATEGORY_FILTER_VALUE_KEY); // might return null
-            mSearchQuery = savedInstanceState.getString(SEARCH_QUERY_KEY); // might return null
+            mUserQuery = savedInstanceState.getString(SEARCH_QUERY_KEY); // might return null
         }
     }
 
@@ -89,19 +90,27 @@ public class MainActivity extends AppCompatActivity {
         mSearchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
-                if (!query.isEmpty()) {
-                    mSearchQuery = query;
+                if (!mMenuLoading) {
+                    if (query.isEmpty()) {
+                        mUserQuery = null;
+                    } else {
+                        mUserQuery = query;
+                    }
                 }
-                updateCursorWithSearch(query);
+                changeAdapterCursor();
                 return true;
             }
 
             @Override
             public boolean onQueryTextChange(String newText) {
-                if (!newText.isEmpty()) {
-                    mSearchQuery = newText;
+                if (!mMenuLoading) {
+                    if (newText.isEmpty()) {
+                        mUserQuery = null;
+                    } else {
+                        mUserQuery = newText;
+                    }
                 }
-                updateCursorWithSearch(newText);
+                changeAdapterCursor();
                 return true;
             }
         });
@@ -109,33 +118,23 @@ public class MainActivity extends AppCompatActivity {
         mSearchView.setOnCloseListener(new SearchView.OnCloseListener() {
             @Override
             public boolean onClose() {
-                mSearchQuery = null;
+                mUserQuery = null;
+                changeAdapterCursor();
                 return true;
             }
         });
 
         // once menu is set up, incorporate pre-existing filter & query values if present
-        incorporateSavedFilterAndQueryValues();
-
-        return true;
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        //incorporateSavedFilterAndQueryValues();
-    }
-
-    private void incorporateSavedFilterAndQueryValues() {
-        if (mCategoryFilterValue != null && mSearchQuery == null) {
-            setFilter();
-        } else if (mSearchQuery != null) {
+        if (mUserQuery != null) {
             MenuItemCompat.expandActionView(mMenu.findItem(R.id.action_search_main));
-            //((SearchView) mMenu.findItem(R.id.action_search_main).getActionView()).setQuery(mSearchQuery, false);
-            ((SearchView) findViewById(R.id.action_search_main)).setQuery(mSearchQuery, false);
-        } else {
-            mAdapter.changeCursor(mHelper.getAllPlaces());
+            ((SearchView) findViewById(R.id.action_search_main)).setQuery(mUserQuery, false);
+            changeAdapterCursor();
+        } else if (mCategoryFilterValue != null) {
+            changeAdapterCursor();
         }
+
+        mMenuLoading = false;
+        return true;
     }
 
     @Override
@@ -161,8 +160,8 @@ public class MainActivity extends AppCompatActivity {
         if (mCategoryFilterValue != null) {
             outState.putString(CATEGORY_FILTER_VALUE_KEY, mCategoryFilterValue);
         }
-        if (mSearchQuery != null) {
-            outState.putString(SEARCH_QUERY_KEY, mSearchQuery);
+        if (mUserQuery != null) {
+            outState.putString(SEARCH_QUERY_KEY, mUserQuery);
         }
     }
 
@@ -171,14 +170,6 @@ public class MainActivity extends AppCompatActivity {
         Cursor cursor = mAdapter.getCursor();
         cursor.close();
         super.onDestroy();
-    }
-
-    private void updateCursorWithSearch(String query) {
-        if (mCategoryFilterValue == null) {
-            mAdapter.changeCursor(mHelper.searchAllPlaces(query));
-        } else {
-            mAdapter.changeCursor(mHelper.searchAllPlacesByCategory(query, mCategoryFilterValue));
-        }
     }
 
     private void setStatusBarColor(int colorResource) {
@@ -219,7 +210,10 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 mCategoryFilterValue = spinner.getSelectedItem().toString();
-                setFilter();
+                if (mCategoryFilterValue.equals("All")) {
+                    mCategoryFilterValue = null;
+                }
+                changeAdapterCursor();
                 dialog.dismiss();
             }
         });
@@ -228,7 +222,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 mCategoryFilterValue = null;
-                clearFilter();
+                changeAdapterCursor();
                 dialog.dismiss();
             }
         });
@@ -236,22 +230,30 @@ public class MainActivity extends AppCompatActivity {
         builder.show();
     }
 
-    private void setFilter() {
-        if (mSearchQuery != null) {
-            mAdapter.changeCursor(mHelper.searchAllPlacesByCategory(mSearchQuery, mCategoryFilterValue));
-        } else {
+    private void changeAdapterCursor() {
+        if (mCategoryFilterValue != null && mUserQuery != null) {
+
+            mAdapter.changeCursor(mHelper.searchAllPlacesByCategory(mUserQuery, mCategoryFilterValue));
+
+        } else if (mCategoryFilterValue != null) { // && mUserQuery == null
+
             mAdapter.changeCursor(mHelper.getAllPlacesByCategory(mCategoryFilterValue));
+
+        } else if (mUserQuery != null) { // && mCategoryFilterValue == null
+
+            mAdapter.changeCursor(mHelper.searchAllPlaces(mUserQuery));
+
+        } else { // mCategoryFilterValue == null && mUserQuery == null
+
+            mAdapter.changeCursor(mHelper.getAllPlaces());
+
         }
 
-        if (mCategoryFilterValue.equals("All")) {
-            mMenu.findItem(R.id.action_filter_main).setIcon(R.drawable.ic_filter_list_white_18dp);
-        } else {
+        if (mCategoryFilterValue != null && !mCategoryFilterValue.equals("All")) {
             mMenu.findItem(R.id.action_filter_main).setIcon(R.drawable.ic_filter_list_cyan_a200_18dp);
-        }
-    }
+        } else {
 
-    private void clearFilter() {
-        mAdapter.changeCursor(mHelper.getAllPlaces());
-        mMenu.findItem(R.id.action_filter_main).setIcon(R.drawable.ic_filter_list_white_18dp);
+            mMenu.findItem(R.id.action_filter_main).setIcon(R.drawable.ic_filter_list_white_18dp);
+        }
     }
 }

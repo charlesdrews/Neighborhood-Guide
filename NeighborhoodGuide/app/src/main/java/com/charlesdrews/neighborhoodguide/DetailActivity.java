@@ -2,6 +2,8 @@ package com.charlesdrews.neighborhoodguide;
 
 import android.app.AlertDialog;
 import android.content.DialogInterface;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
@@ -16,6 +18,7 @@ import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.RatingBar;
 import android.widget.TextView;
 
@@ -53,6 +56,17 @@ public class DetailActivity extends AppCompatActivity {
 
             getSupportActionBar().setTitle(selectedPlace.getTitle());
 
+            ImageView imageView = (ImageView) findViewById(R.id.detail_image_view);
+            int resId = getResources().getIdentifier(
+                    selectedPlace.getImageRes(),    // file name w/o extension
+                    "raw",                          // file stored in res/raw/
+                    getPackageName()
+            );
+            if (resId != 0) { // getIdentifier returns 0 if resource not found
+                Bitmap image = BitmapFactory.decodeResource(getResources(), resId);
+                imageView.setImageBitmap(image);
+            }
+
             TextView overviewView = (TextView) findViewById(R.id.detail_overview);
             String overviewText = selectedPlace.getCategory() + " | "
                     + selectedPlace.getLocation() + " | "
@@ -75,6 +89,12 @@ public class DetailActivity extends AppCompatActivity {
 
             TextView descriptionView = (TextView) findViewById(R.id.detail_description);
             descriptionView.setText(selectedPlace.getDescription());
+
+            if (!selectedPlace.getImageCredit().isEmpty()) {
+                String credit = "Photo credit: " + selectedPlace.getImageCredit();
+                TextView imageCreditView = (TextView) findViewById(R.id.detail_image_credit);
+                imageCreditView.setText(credit);
+            }
 
             RatingBar ratingBar = (RatingBar) findViewById(R.id.detail_rating_bar);
             ratingBar.setRating(selectedPlace.getRating());

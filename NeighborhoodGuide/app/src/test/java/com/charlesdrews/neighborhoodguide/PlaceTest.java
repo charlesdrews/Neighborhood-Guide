@@ -16,6 +16,8 @@ public class PlaceTest {
             "Midtown",
             "Public Transportation",
             "train station",
+            "central_park",
+            "some person on Wikipedia",
             true,
             3.5f,
             "look at the stars on the ceiling"
@@ -49,6 +51,16 @@ public class PlaceTest {
     @Test
     public void testGetDescription() {
         assertEquals("train station", place.getDescription());
+    }
+
+    @Test
+    public void testGetImageRes() {
+        assertEquals("central_park", place.getImageRes());
+    }
+
+    @Test
+    public void testGetImageCredit() {
+        assertEquals("some person on Wikipedia", place.getImageCredit());
     }
 
     @Test

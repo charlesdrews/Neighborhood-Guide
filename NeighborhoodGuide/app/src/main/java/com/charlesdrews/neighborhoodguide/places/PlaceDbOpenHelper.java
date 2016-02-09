@@ -27,9 +27,10 @@ public class PlaceDbOpenHelper extends SQLiteOpenHelper {
     public static final String COL_NEIGHBORHOOD = "neighborhood";
     public static final String COL_CATEGORY = "category";
     public static final String COL_DESCRIPTION = "description";
+    public static final String COL_IMAGE_RES = "image_resource";
+    public static final String COL_IMAGE_CREDIT = "image_credit";
     public static final String COL_IS_FAVORITE = "is_favorite";
     public static final String COL_RATING = "rating";
-    public static final String COL_IMAGE = "image";
     public static final String COL_NOTE = "note";
 
     private static final String[] SEARCH_RESULT_COLUMNS = new String[]{
@@ -44,9 +45,10 @@ public class PlaceDbOpenHelper extends SQLiteOpenHelper {
                     + COL_NEIGHBORHOOD + " TEXT, "
                     + COL_CATEGORY + " TEXT, "
                     + COL_DESCRIPTION + " TEXT, "
+                    + COL_IMAGE_RES + " TEXT, "
+                    + COL_IMAGE_CREDIT + " TEXT, "
                     + COL_IS_FAVORITE + " INTEGER, "
                     + COL_RATING + " REAL, "
-                    + COL_IMAGE + " BLOB, "
                     + COL_NOTE + " TEXT)";
 
     private static PlaceDbOpenHelper mInstance;
@@ -220,13 +222,15 @@ public class PlaceDbOpenHelper extends SQLiteOpenHelper {
             String neighborhood = cursor.getString(cursor.getColumnIndex(COL_NEIGHBORHOOD));
             String category = cursor.getString(cursor.getColumnIndex(COL_CATEGORY));
             String description = cursor.getString(cursor.getColumnIndex(COL_DESCRIPTION));
+            String imageRes = cursor.getString(cursor.getColumnIndex(COL_IMAGE_RES));
+            String imageCredit = cursor.getString(cursor.getColumnIndex(COL_IMAGE_CREDIT));
             Boolean isFavorite = (cursor.getInt(cursor.getColumnIndex(COL_IS_FAVORITE)) == 1);
             Float rating = cursor.getFloat(cursor.getColumnIndex(COL_RATING));
             String note = cursor.getString(cursor.getColumnIndex(COL_NOTE));
 
             cursor.close();
-            return new Place(id, title, location, neighborhood, category, description, isFavorite,
-                    rating, note);
+            return new Place(id, title, location, neighborhood, category, description, imageRes,
+                    imageCredit, isFavorite, rating, note);
         } else {
             cursor.close();
             return null;
@@ -245,6 +249,7 @@ public class PlaceDbOpenHelper extends SQLiteOpenHelper {
         values.put(COL_NEIGHBORHOOD, place.getNeighborhood());
         values.put(COL_CATEGORY, place.getCategory());
         values.put(COL_DESCRIPTION, place.getDescription());
+        values.put(COL_IMAGE_RES, place.getImageRes());
         values.put(COL_IS_FAVORITE, (place.isFavorite() ? 1 : 0));
         values.put(COL_RATING, place.getRating());
         values.put(COL_NOTE, place.getNote());
@@ -303,25 +308,6 @@ public class PlaceDbOpenHelper extends SQLiteOpenHelper {
 
         cursor.close();
         return categories;
-    }
-
-    public String getCategoryById(int id) {
-        String category = null;
-
-        SQLiteDatabase db = getReadableDatabase();
-        Cursor cursor = db.query(TABLE_NAME_PLACES, // table
-                new String[]{COL_CATEGORY},         // columns
-                COL_ID + "=?",                      // selection
-                new String[]{String.valueOf(id)},   // selectionArgs
-                null,                               // group by
-                null,                               // having
-                null                                // order by
-        );
-        if (cursor.moveToFirst()) {
-            category = cursor.getString(cursor.getColumnIndex(COL_CATEGORY));
-        }
-        cursor.close();
-        return category;
     }
 
     public boolean isFavoriteById(int id) {

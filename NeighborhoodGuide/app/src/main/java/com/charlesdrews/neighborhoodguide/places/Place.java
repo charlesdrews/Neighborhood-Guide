@@ -11,12 +11,15 @@ public class Place {
     private String mNeighborhood;
     private String mCategory;
     private String mDescription;
+    private String mImageRes;
+    private String mImageCredit;
     private boolean mIsFavorite;
     private float mRating;
     private String mNote;
 
     public Place (int id, String title, String location, String neighborhood, String category,
-                  String description, boolean isFavorite, float rating, String note)
+                  String description, String imageRes, String imageCredit, boolean isFavorite,
+                  float rating, String note)
     {
         mId = id;
         mTitle = title;
@@ -24,6 +27,8 @@ public class Place {
         mNeighborhood = neighborhood;
         mCategory = category;
         mDescription = description;
+        mImageRes = imageRes;
+        mImageCredit = imageCredit;
         mIsFavorite = isFavorite;
         mRating = rating;
         mNote = note;
@@ -51,6 +56,14 @@ public class Place {
 
     public String getDescription() {
         return mDescription;
+    }
+
+    public String getImageRes() {
+        return mImageRes;
+    }
+
+    public String getImageCredit() {
+        return mImageCredit;
     }
 
     public boolean isFavorite() {

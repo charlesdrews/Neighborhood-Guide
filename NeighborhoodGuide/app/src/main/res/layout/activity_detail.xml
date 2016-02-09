@@ -24,9 +24,15 @@
             app:contentScrim="@color/detailToolbarBg"
             app:layout_scrollFlags="scroll|exitUntilCollapsed">
 
+            <ImageView
+                android:id="@+id/detail_image_view"
+                android:background="@color/detailToolbarBg"
+                android:scaleType="centerCrop"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
             <android.support.v7.widget.Toolbar
                 android:id="@+id/toolbar_main"
-                android:background="@color/detailToolbarBg"
                 android:layout_width="match_parent"
                 android:layout_height="?attr/actionBarSize"
                 app:layout_collapseMode="pin"

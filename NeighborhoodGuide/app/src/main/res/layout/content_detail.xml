@@ -43,7 +43,7 @@
             android:hint="@string/detail_hint_add_note"
             android:textAppearance="?android:attr/textAppearanceSmall"
             android:textStyle="italic"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content" />
 
         <View
@@ -60,5 +60,18 @@
             android:layout_height="wrap_content"
             android:text="@string/large_text" />
 
+        <View
+            android:background="@color/detailStatusBar"
+            android:layout_marginTop="@dimen/detail_div_margin"
+            android:layout_marginBottom="@dimen/detail_div_margin"
+            android:layout_width="match_parent"
+            android:layout_height="1dp" />
+
+        <TextView
+            android:id="@+id/detail_image_credit"
+            android:textAppearance="?android:attr/textAppearanceSmall"
+            android:textStyle="italic"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
     </LinearLayout>
 </android.support.v4.widget.NestedScrollView>

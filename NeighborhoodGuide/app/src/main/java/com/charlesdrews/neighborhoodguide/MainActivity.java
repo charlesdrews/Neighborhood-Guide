@@ -1,5 +1,6 @@
 package com.charlesdrews.neighborhoodguide;
 
+import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AlertDialog;
 import android.app.SearchManager;
 import android.content.Context;
@@ -26,35 +27,25 @@ import android.widget.Spinner;
 import com.charlesdrews.neighborhoodguide.places.PlaceDbAssetHelper;
 import com.charlesdrews.neighborhoodguide.places.PlaceDbOpenHelper;
 
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.common.api.GoogleApiClient.OnConnectionFailedListener;
-import com.google.android.gms.location.places.Places;
-
 import java.util.ArrayList;
 
-public class MainActivity extends AppCompatActivity implements OnConnectionFailedListener {
-    public static final String SELECTED_PLACE_KEY = MainActivity.class.getCanonicalName() + ".selectedPlaceKey";
+public class MainActivity extends AppCompatActivity {
+    public static final String SELECTED_PLACE_KEY = "selected_place_key";
+    public static final String CATEGORY_FILTER_VALUE_KEY = "category_filter_value_key";
+    public static final String SEARCH_QUERY_KEY = "search_query_key";
 
-    private GoogleApiClient mGoogleApiClient;
     private Menu mMenu;
     private PlaceDbOpenHelper mHelper;
     private RecyclerCursorAdapter mAdapter;
     private String mCategoryFilterValue;
+    private String mSearchQuery;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        //TODO - figure out maps api
-        mGoogleApiClient = new GoogleApiClient
-                .Builder(this)
-                .addApi(Places.GEO_DATA_API)
-                .addApi(Places.PLACE_DETECTION_API)
-                .enableAutoManage(this, this)
-                .build();
-
+        // set up toolbar
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar_main);
         setSupportActionBar(toolbar);
         if (getSupportActionBar() != null) {
@@ -62,12 +53,15 @@ public class MainActivity extends AppCompatActivity implements OnConnectionFaile
         }
         setStatusBarColor(R.color.mainStatusBar);
 
+        // set up DB Asset Helper
         PlaceDbAssetHelper dbAssetHelper = new PlaceDbAssetHelper(MainActivity.this);
         dbAssetHelper.getReadableDatabase();
 
+        // set up DB Open Helper
         mHelper = PlaceDbOpenHelper.getInstance(MainActivity.this);
         final Cursor cursor = mHelper.getAllPlaces();
 
+        // set up recycler view
         RecyclerView recyclerView = (RecyclerView) findViewById(R.id.recycler_view_main);
         recyclerView.setHasFixedSize(true);
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(MainActivity.this);
@@ -76,7 +70,11 @@ public class MainActivity extends AppCompatActivity implements OnConnectionFaile
         mAdapter = new RecyclerCursorAdapter(MainActivity.this, cursor);
         recyclerView.setAdapter(mAdapter);
 
-        mCategoryFilterValue = null;
+        // retrieve saved instance state values (if any)
+        if (savedInstanceState != null) {
+            mCategoryFilterValue = savedInstanceState.getString(CATEGORY_FILTER_VALUE_KEY); // might return null
+            mSearchQuery = savedInstanceState.getString(SEARCH_QUERY_KEY); // might return null
+        }
     }
 
     @Override
@@ -91,17 +89,53 @@ public class MainActivity extends AppCompatActivity implements OnConnectionFaile
         mSearchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
+                if (!query.isEmpty()) {
+                    mSearchQuery = query;
+                }
                 updateCursorWithSearch(query);
                 return true;
             }
 
             @Override
             public boolean onQueryTextChange(String newText) {
+                if (!newText.isEmpty()) {
+                    mSearchQuery = newText;
+                }
                 updateCursorWithSearch(newText);
                 return true;
             }
         });
+
+        mSearchView.setOnCloseListener(new SearchView.OnCloseListener() {
+            @Override
+            public boolean onClose() {
+                mSearchQuery = null;
+                return true;
+            }
+        });
+
+        // once menu is set up, incorporate pre-existing filter & query values if present
+        incorporateSavedFilterAndQueryValues();
+
         return true;
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        //incorporateSavedFilterAndQueryValues();
+    }
+
+    private void incorporateSavedFilterAndQueryValues() {
+        if (mCategoryFilterValue != null && mSearchQuery == null) {
+            setFilter();
+        } else if (mSearchQuery != null) {
+            MenuItemCompat.expandActionView(mMenu.findItem(R.id.action_search_main));
+            //((SearchView) mMenu.findItem(R.id.action_search_main).getActionView()).setQuery(mSearchQuery, false);
+            ((SearchView) findViewById(R.id.action_search_main)).setQuery(mSearchQuery, false);
+        } else {
+            mAdapter.changeCursor(mHelper.getAllPlaces());
+        }
     }
 
     @Override
@@ -122,9 +156,14 @@ public class MainActivity extends AppCompatActivity implements OnConnectionFaile
     }
 
     @Override
-    protected void onResume() {
-        super.onResume();
-        mAdapter.changeCursor(mHelper.getAllPlaces());
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        if (mCategoryFilterValue != null) {
+            outState.putString(CATEGORY_FILTER_VALUE_KEY, mCategoryFilterValue);
+        }
+        if (mSearchQuery != null) {
+            outState.putString(SEARCH_QUERY_KEY, mSearchQuery);
+        }
     }
 
     @Override
@@ -135,7 +174,11 @@ public class MainActivity extends AppCompatActivity implements OnConnectionFaile
     }
 
     private void updateCursorWithSearch(String query) {
-        mAdapter.changeCursor(mHelper.searchAllPlaces(query));
+        if (mCategoryFilterValue == null) {
+            mAdapter.changeCursor(mHelper.searchAllPlaces(query));
+        } else {
+            mAdapter.changeCursor(mHelper.searchAllPlacesByCategory(query, mCategoryFilterValue));
+        }
     }
 
     private void setStatusBarColor(int colorResource) {
@@ -194,7 +237,11 @@ public class MainActivity extends AppCompatActivity implements OnConnectionFaile
     }
 
     private void setFilter() {
-        mAdapter.changeCursor(mHelper.getAllPlacesByCategory(mCategoryFilterValue));
+        if (mSearchQuery != null) {
+            mAdapter.changeCursor(mHelper.searchAllPlacesByCategory(mSearchQuery, mCategoryFilterValue));
+        } else {
+            mAdapter.changeCursor(mHelper.getAllPlacesByCategory(mCategoryFilterValue));
+        }
 
         if (mCategoryFilterValue.equals("All")) {
             mMenu.findItem(R.id.action_filter_main).setIcon(R.drawable.ic_filter_list_white_18dp);
@@ -206,11 +253,5 @@ public class MainActivity extends AppCompatActivity implements OnConnectionFaile
     private void clearFilter() {
         mAdapter.changeCursor(mHelper.getAllPlaces());
         mMenu.findItem(R.id.action_filter_main).setIcon(R.drawable.ic_filter_list_white_18dp);
-    }
-
-    @Override
-    public void onConnectionFailed(ConnectionResult connectionResult) {
-        //TODO - implement something to handle connection failures
-        //https://developers.google.com/android/guides/api-client#HandlingFailures
     }
 }

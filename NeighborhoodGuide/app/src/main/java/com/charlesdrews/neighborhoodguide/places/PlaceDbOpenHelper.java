@@ -138,7 +138,7 @@ public class PlaceDbOpenHelper extends SQLiteOpenHelper {
         return getPlaces(true, category);
     }
 
-    private Cursor searchPlaces(String query, boolean favoritesOnly) {
+    private Cursor searchPlaces(String query, boolean favoritesOnly, String category) {
         String[] queryTokens = query.split(" ");
 
         StringBuilder selectionStrBuilder = new StringBuilder();
@@ -164,6 +164,11 @@ public class PlaceDbOpenHelper extends SQLiteOpenHelper {
             selectionStrBuilder.append(" AND " + COL_IS_FAVORITE + "=1");
         }
 
+        if (category != null) {
+            selectionStrBuilder.append(" AND " + COL_CATEGORY + "=?");
+            selectionArgsList.add(category);
+        }
+
         String selection = selectionStrBuilder.toString();
         String[] selectionArgs = new String[selectionArgsList.size()];
         selectionArgs = selectionArgsList.toArray(selectionArgs);
@@ -182,11 +187,19 @@ public class PlaceDbOpenHelper extends SQLiteOpenHelper {
     }
 
     public Cursor searchAllPlaces(String query) {
-        return searchPlaces(query, false);
+        return searchPlaces(query, false, null);
+    }
+
+    public Cursor searchAllPlacesByCategory(String query, String category) {
+        return searchPlaces(query, false, category);
     }
 
     public Cursor searchFavoritePlaces(String query) {
-        return searchPlaces(query, true);
+        return searchPlaces(query, true, null);
+    }
+
+    public Cursor searchFavoritePlacesByCategory(String query, String category) {
+        return searchPlaces(query, true, category);
     }
 
     public Place getPlaceById(int id) {

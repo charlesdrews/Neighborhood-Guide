@@ -9,6 +9,7 @@ import android.os.Bundle;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.NavUtils;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
@@ -33,12 +34,14 @@ public class FavoritesActivity extends AppCompatActivity {
     private PlaceDbOpenHelper mHelper;
     private RecyclerCursorAdapter mAdapter;
     private String mCategoryFilterValue;
+    private String mSearchQuery;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_favorites);
 
+        // set up toolbar
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar_favs);
         setSupportActionBar(toolbar);
         if (getSupportActionBar() != null) {
@@ -47,9 +50,11 @@ public class FavoritesActivity extends AppCompatActivity {
         }
         setStatusBarColor(R.color.favsStatusBar);
 
+        // set up DB Open Helper
         mHelper = PlaceDbOpenHelper.getInstance(FavoritesActivity.this);
         final Cursor cursor = mHelper.getFavoritePlaces();
 
+        // set up recycler view
         RecyclerView recyclerView = (RecyclerView) findViewById(R.id.recycler_view_favs);
         recyclerView.setHasFixedSize(false);
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(FavoritesActivity.this);
@@ -57,6 +62,12 @@ public class FavoritesActivity extends AppCompatActivity {
 
         mAdapter = new RecyclerCursorAdapter(FavoritesActivity.this, cursor);
         recyclerView.setAdapter(mAdapter);
+
+        // retrieve saved instance state values (if any)
+        if (savedInstanceState != null) {
+            mCategoryFilterValue = savedInstanceState.getString(MainActivity.CATEGORY_FILTER_VALUE_KEY); // might return null
+            mSearchQuery = savedInstanceState.getString(MainActivity.SEARCH_QUERY_KEY); // might return null
+        }
     }
 
     @Override
@@ -71,17 +82,53 @@ public class FavoritesActivity extends AppCompatActivity {
         mSearchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
+                if (!query.isEmpty()) {
+                    mSearchQuery = query;
+                }
                 updateCursorWithSearch(query);
                 return true;
             }
 
             @Override
             public boolean onQueryTextChange(String newText) {
+                if (!newText.isEmpty()) {
+                    mSearchQuery = newText;
+                }
                 updateCursorWithSearch(newText);
                 return true;
             }
         });
+
+        mSearchView.setOnCloseListener(new SearchView.OnCloseListener() {
+            @Override
+            public boolean onClose() {
+                mSearchQuery = null;
+                return true;
+            }
+        });
+
+        // once menu is set up, incorporate pre-existing filter & query values if present
+        incorporateSavedFilterAndQueryValues();
+
         return true;
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        //incorporateSavedFilterAndQueryValues();
+    }
+
+    private void incorporateSavedFilterAndQueryValues() {
+        if (mCategoryFilterValue != null && mSearchQuery == null) {
+            setFilter();
+        } else if (mSearchQuery != null) {
+            MenuItemCompat.expandActionView(mMenu.findItem(R.id.action_search_favs));
+            //((SearchView) mMenu.findItem(R.id.action_search_favs).getActionView()).setQuery(mSearchQuery, false);
+            ((SearchView) findViewById(R.id.action_search_favs)).setQuery(mSearchQuery, false);
+        } else {
+            mAdapter.changeCursor(mHelper.getFavoritePlaces());
+        }
     }
 
     @Override
@@ -110,9 +157,14 @@ public class FavoritesActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onResume() {
-        super.onResume();
-        updateCursorWithFavorites();
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        if (mCategoryFilterValue != null) {
+            outState.putString(MainActivity.CATEGORY_FILTER_VALUE_KEY, mCategoryFilterValue);
+        }
+        if (mSearchQuery != null) {
+            outState.putString(MainActivity.SEARCH_QUERY_KEY, mSearchQuery);
+        }
     }
 
     @Override
@@ -123,11 +175,19 @@ public class FavoritesActivity extends AppCompatActivity {
     }
 
     private void updateCursorWithSearch(String query) {
-        mAdapter.changeCursor(mHelper.searchFavoritePlaces(query));
+        if (mCategoryFilterValue == null) {
+            mAdapter.changeCursor(mHelper.searchFavoritePlaces(query));
+        } else {
+            mAdapter.changeCursor(mHelper.searchFavoritePlacesByCategory(query, mCategoryFilterValue));
+        }
     }
 
     private void updateCursorWithFavorites() {
-        mAdapter.changeCursor(mHelper.getFavoritePlaces());
+        if (mSearchQuery == null) {
+            mAdapter.changeCursor(mHelper.getFavoritePlaces());
+        } else {
+            mAdapter.changeCursor(mHelper.searchFavoritePlaces(mSearchQuery));
+        }
     }
 
     private void setStatusBarColor(int colorResource) {
@@ -186,7 +246,11 @@ public class FavoritesActivity extends AppCompatActivity {
     }
 
     private void setFilter() {
-        mAdapter.changeCursor(mHelper.getFavoritePlacesByCategory(mCategoryFilterValue));
+        if (mSearchQuery != null) {
+            mAdapter.changeCursor(mHelper.searchFavoritePlacesByCategory(mSearchQuery, mCategoryFilterValue));
+        } else {
+            mAdapter.changeCursor(mHelper.getFavoritePlacesByCategory(mCategoryFilterValue));
+        }
 
         if (mCategoryFilterValue.equals("All")) {
             mMenu.findItem(R.id.action_filter_favs).setIcon(R.drawable.ic_filter_list_white_18dp);

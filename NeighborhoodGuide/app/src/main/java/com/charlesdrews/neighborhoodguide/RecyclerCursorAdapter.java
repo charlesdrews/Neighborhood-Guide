@@ -1,10 +1,13 @@
 package com.charlesdrews.neighborhoodguide;
 
+import android.animation.AnimatorInflater;
+import android.animation.StateListAnimator;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.drawable.Drawable;
+import android.os.Build;
 import android.support.design.widget.Snackbar;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.CardView;
@@ -77,6 +80,12 @@ public class RecyclerCursorAdapter extends RecyclerView.Adapter<RecyclerCursorAd
         if (mCursor.moveToPosition(position)) {
             holder.mCardView.setCardBackgroundColor(ContextCompat.getColor(mContext, R.color.cardBg));
 
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                // raise card on press (will only see if long press; on tap the details activity starts before animation complets)
+                StateListAnimator animator = AnimatorInflater.loadStateListAnimator(mContext, R.anim.raise);
+                holder.mCardView.setStateListAnimator(animator);
+            }
+
             String title = mCursor.getString(mCursor.getColumnIndex(PlaceDbOpenHelper.COL_TITLE));
             holder.mTitleTextView.setText(title, TextView.BufferType.SPANNABLE);
 
@@ -112,8 +121,7 @@ public class RecyclerCursorAdapter extends RecyclerView.Adapter<RecyclerCursorAd
                     mContext.startActivity(intent);
                 }
             });
-        } else {
-            // if mCursor.moveToPosition(position) fails
+        } else { // if mCursor.moveToPosition(position) fails
             holder.mTitleTextView.setText(ERR_MSG_ITEM_NOT_FOUND);
         }
     }

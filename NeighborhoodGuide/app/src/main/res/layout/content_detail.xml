@@ -10,6 +10,8 @@
     tools:showIn="@layout/activity_detail">
 
     <LinearLayout
+        android:id="@+id/detail_linear"
+
         android:orientation="vertical"
         android:padding="@dimen/text_margin"
         android:layout_width="match_parent"

@@ -28,6 +28,7 @@
                 android:id="@+id/detail_image_view"
                 android:background="@color/detailToolbarBg"
                 android:scaleType="centerCrop"
+                android:contentDescription="@string/detail_image_content_desc"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content" />
 
@@ -36,7 +37,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="?attr/actionBarSize"
                 app:layout_collapseMode="pin"
-                app:popupTheme="@style/AppTheme.NoActionBar.PopupOverlay" />
+                app:popupTheme="@style/AppTheme.NoActionBar.PopupOverlay">
+            </android.support.v7.widget.Toolbar>
 
         </android.support.design.widget.CollapsingToolbarLayout>
     </android.support.design.widget.AppBarLayout>

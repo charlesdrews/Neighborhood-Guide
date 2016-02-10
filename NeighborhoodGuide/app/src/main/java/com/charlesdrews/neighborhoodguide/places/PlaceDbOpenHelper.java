@@ -384,24 +384,6 @@ public class PlaceDbOpenHelper extends SQLiteOpenHelper {
         return (rowsAffected > 0);
     }
 
-    public String getNoteById(int id) {
-        SQLiteDatabase db = getReadableDatabase();
-        Cursor cursor = db.query(
-                TABLE_NAME_PLACES,      // table
-                new String[]{COL_NOTE}, // columns
-                COL_ID + " = ?",        // selection
-                new String[]{String.valueOf(id)}, // selectionArgs
-                null, null, null, null  // group by, having, order by, limit
-        );
-
-        String note = null;
-        if (cursor.moveToFirst()) {
-            note = cursor.getString(cursor.getColumnIndex(COL_NOTE));
-        }
-        cursor.close();
-        return note;
-    }
-
     /**
      * Sets the note for the specified Place
      * @param id - unique id of the Place to be updated

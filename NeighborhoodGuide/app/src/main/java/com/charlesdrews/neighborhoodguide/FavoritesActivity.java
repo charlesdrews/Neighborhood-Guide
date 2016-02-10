@@ -217,7 +217,6 @@ public class FavoritesActivity extends AppCompatActivity {
                     mCategoryFilterValue = null;
                 }
                 changeAdapterCursor();
-                dialog.dismiss();
             }
         });
 
@@ -226,7 +225,6 @@ public class FavoritesActivity extends AppCompatActivity {
             public void onClick(DialogInterface dialog, int which) {
                 mCategoryFilterValue = null;
                 changeAdapterCursor();
-                dialog.dismiss();
             }
         });
 
@@ -255,7 +253,6 @@ public class FavoritesActivity extends AppCompatActivity {
         if (mCategoryFilterValue != null && !mCategoryFilterValue.equals("All")) {
             mMenu.findItem(R.id.action_filter_favs).setIcon(R.drawable.filter);
         } else {
-
             mMenu.findItem(R.id.action_filter_favs).setIcon(R.drawable.filter_outline);
         }
     }

@@ -140,6 +140,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        return super.onPrepareOptionsMenu(menu);
+    }
+
+    @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.action_filter_main:
@@ -216,7 +221,6 @@ public class MainActivity extends AppCompatActivity {
                     mCategoryFilterValue = null;
                 }
                 changeAdapterCursor();
-                dialog.dismiss();
             }
         });
 
@@ -225,7 +229,6 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(DialogInterface dialog, int which) {
                 mCategoryFilterValue = null;
                 changeAdapterCursor();
-                dialog.dismiss();
             }
         });
 

@@ -4,8 +4,8 @@ Project 2 - Neighborhood Guide App
 =============
 
 ####Features:
-* **Home screen:** shows all places in database; user can search or filter to narrow down places
-  * User query is searched for in 4 db columns: Title, Location, Neighborhood, Category
+* **Home screen:** shows all places in database until user searches or filters to narrow it down
+  * User query is searched for in 4 database columns: Title, Location, Neighborhood, Category
   * Query is broken into tokens (at spaces); for a record to be returned, each token must appear in that record, but not necessarily in the same field (e.g. token 1 may appear in Title, and token 2 may appear in Location)
   * Search updates on each keypress, not only on submit; soft keyboard closes on submit
   * Filter places by category using the filter icon in the toolbar which launches a popup with a spinner of categories

@@ -253,10 +253,10 @@ public class FavoritesActivity extends AppCompatActivity {
         }
 
         if (mCategoryFilterValue != null && !mCategoryFilterValue.equals("All")) {
-            mMenu.findItem(R.id.action_filter_favs).setIcon(R.drawable.ic_filter_list_cyan_a200_18dp);
+            mMenu.findItem(R.id.action_filter_favs).setIcon(R.drawable.filter);
         } else {
 
-            mMenu.findItem(R.id.action_filter_favs).setIcon(R.drawable.ic_filter_list_white_18dp);
+            mMenu.findItem(R.id.action_filter_favs).setIcon(R.drawable.filter_outline);
         }
     }
 }

@@ -188,8 +188,8 @@ public class MainActivity extends AppCompatActivity {
         builder.setTitle("Filter by category");
 
         final Spinner spinner = new Spinner(MainActivity.this);
-        ArrayList<String> categories = mHelper.getCategories();
 
+        ArrayList<String> categories = mHelper.getCategories();
         ArrayAdapter<String> adapter = new ArrayAdapter<>(
                 MainActivity.this,
                 android.R.layout.simple_spinner_item,
@@ -252,10 +252,10 @@ public class MainActivity extends AppCompatActivity {
         }
 
         if (mCategoryFilterValue != null && !mCategoryFilterValue.equals("All")) {
-            mMenu.findItem(R.id.action_filter_main).setIcon(R.drawable.ic_filter_list_cyan_a200_18dp);
+            mMenu.findItem(R.id.action_filter_main).setIcon(R.drawable.filter);
         } else {
 
-            mMenu.findItem(R.id.action_filter_main).setIcon(R.drawable.ic_filter_list_white_18dp);
+            mMenu.findItem(R.id.action_filter_main).setIcon(R.drawable.filter_outline);
         }
     }
 }

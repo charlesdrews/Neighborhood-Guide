@@ -12,7 +12,7 @@
 
     <item
         android:id="@+id/action_filter_favs"
-        android:icon="@drawable/ic_filter_list_white_18dp"
+        android:icon="@drawable/filter_outline"
         android:title="@string/action_filter"
         app:showAsAction="ifRoom" />
 

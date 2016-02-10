@@ -1,9 +1,9 @@
-Charles Drews
+#####Charles Drews
 
 Project 2 - Neighborhood Guide App
 =============
 
-###Features:
+####Features:
 * **Home screen:** shows all places in database; user can search or filter to narrow down places
   * User query is searched for in 4 db columns: Title, Location, Neighborhood, Category
   * Query is broken into tokens (at spaces); for a record to be returned, each token must appear in that record, but not necessarily in the same field (e.g. token 1 may appear in Title, and token 2 may appear in Location)

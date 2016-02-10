@@ -146,16 +146,26 @@ public class PlaceDbOpenHelper extends SQLiteOpenHelper {
         StringBuilder selectionStrBuilder = new StringBuilder();
         ArrayList<String> selectionArgsList = new ArrayList<>();
 
-        selectionStrBuilder.append("(" + COL_TITLE + " LIKE ? OR "+ COL_LOCATION + " LIKE ? OR "
-                + COL_NEIGHBORHOOD + " LIKE ?)");
+        selectionStrBuilder.append(
+                "(" + COL_TITLE + " LIKE ? OR "
+                    + COL_LOCATION + " LIKE ? OR "
+                    + COL_NEIGHBORHOOD + " LIKE ? OR "
+                    + COL_CATEGORY + " LIKE ?)"
+        );
+        selectionArgsList.add("%" + queryTokens[0] + "%");
         selectionArgsList.add("%" + queryTokens[0] + "%");
         selectionArgsList.add("%" + queryTokens[0] + "%");
         selectionArgsList.add("%" + queryTokens[0] + "%");
 
         if (queryTokens.length > 1) {
             for (int i = 1; i < queryTokens.length; i++) {
-                selectionStrBuilder.append(" AND (" + COL_TITLE + " LIKE ? OR " + COL_LOCATION
-                        + " LIKE ? OR " + COL_NEIGHBORHOOD + " LIKE ?)");
+                selectionStrBuilder.append(
+                        " AND (" + COL_TITLE + " LIKE ? OR "
+                                + COL_LOCATION + " LIKE ? OR "
+                                + COL_NEIGHBORHOOD + " LIKE ? OR "
+                                + COL_CATEGORY + " LIKE ?)"
+                );
+                selectionArgsList.add("%" + queryTokens[i] + "%");
                 selectionArgsList.add("%" + queryTokens[i] + "%");
                 selectionArgsList.add("%" + queryTokens[i] + "%");
                 selectionArgsList.add("%" + queryTokens[i] + "%");

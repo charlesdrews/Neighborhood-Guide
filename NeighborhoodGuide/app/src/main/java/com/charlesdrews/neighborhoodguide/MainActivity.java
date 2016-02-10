@@ -84,10 +84,10 @@ public class MainActivity extends AppCompatActivity {
         getMenuInflater().inflate(R.menu.menu_main, menu);
 
         SearchManager searchManager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
-        SearchView mSearchView = (SearchView) menu.findItem(R.id.action_search_main).getActionView();
-        mSearchView.setSearchableInfo(searchManager.getSearchableInfo(getComponentName()));
+        final SearchView searchView = (SearchView) menu.findItem(R.id.action_search_main).getActionView();
+        searchView.setSearchableInfo(searchManager.getSearchableInfo(getComponentName()));
 
-        mSearchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
                 if (!mMenuLoading) {
@@ -98,6 +98,7 @@ public class MainActivity extends AppCompatActivity {
                     }
                 }
                 changeAdapterCursor();
+                searchView.clearFocus(); // close the soft keyboard
                 return true;
             }
 
@@ -115,7 +116,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        mSearchView.setOnCloseListener(new SearchView.OnCloseListener() {
+        searchView.setOnCloseListener(new SearchView.OnCloseListener() {
             @Override
             public boolean onClose() {
                 mUserQuery = null;
@@ -127,7 +128,8 @@ public class MainActivity extends AppCompatActivity {
         // once menu is set up, incorporate pre-existing filter & query values if present
         if (mUserQuery != null) {
             MenuItemCompat.expandActionView(mMenu.findItem(R.id.action_search_main));
-            ((SearchView) findViewById(R.id.action_search_main)).setQuery(mUserQuery, false);
+            searchView.setQuery(mUserQuery, false);
+            searchView.clearFocus(); // close the soft keyboard
             changeAdapterCursor();
         } else if (mCategoryFilterValue != null) {
             changeAdapterCursor();

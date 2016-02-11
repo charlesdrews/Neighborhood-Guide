@@ -18,7 +18,8 @@
     <string name="card_title">Title</string>
     <string name="card_overview">Category | Location | Neighborhood</string>
     <string name="card_fav_icon_description">fav_icon</string>
-    <string name="card_transition_name">card_transition</string>
+    <string name="card_transition_name_image">card_transition_image</string>
+    <string name="card_transition_name_icon">card_transition_icon</string>
     <string name="large_text">
         "Material is the metaphor.\n\n"
 

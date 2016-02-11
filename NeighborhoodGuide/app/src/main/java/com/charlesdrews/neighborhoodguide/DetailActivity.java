@@ -67,12 +67,8 @@ public class DetailActivity extends AppCompatActivity {
                 Bitmap image = BitmapFactory.decodeResource(getResources(), resId);
                 imageView.setImageBitmap(image);
             }
-
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                imageView.setTransitionName(
-                        getString(R.string.card_transition_name) //+
-                        //getIntent().getExtras().getInt(ListBaseActivity.POSITION_KEY)
-                );
+                imageView.setTransitionName(getString(R.string.card_transition_name_image));
             }
 
             TextView overviewView = (TextView) findViewById(R.id.detail_overview);
@@ -151,7 +147,6 @@ public class DetailActivity extends AppCompatActivity {
                     Snackbar.make(view, msg, Snackbar.LENGTH_SHORT).show();
                 }
             });
-
         } else {
             TextView locationView = (TextView) findViewById(R.id.detail_overview);
             locationView.setText(getString(R.string.err_msg_item_not_found));

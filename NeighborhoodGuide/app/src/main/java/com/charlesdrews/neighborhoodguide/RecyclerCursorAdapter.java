@@ -3,7 +3,6 @@ package com.charlesdrews.neighborhoodguide;
 import android.animation.AnimatorInflater;
 import android.animation.StateListAnimator;
 import android.app.Activity;
-import android.app.ActivityOptions;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources;
@@ -20,6 +19,7 @@ import android.support.v7.widget.RecyclerView;
 import android.text.Spannable;
 import android.text.Spanned;
 import android.text.style.StrikethroughSpan;
+import android.util.Pair;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -94,8 +94,7 @@ public class RecyclerCursorAdapter extends RecyclerView.Adapter<RecyclerCursorAd
 
                 // set transitionName for image
                 holder.mThumbnailImgView.setTransitionName(
-                        mContext.getString(R.string.card_transition_name) //+ position
-                );
+                        mContext.getString(R.string.card_transition_name_image));
             }
 
             int imageRes = mContext.getResources().getIdentifier(
@@ -145,14 +144,13 @@ public class RecyclerCursorAdapter extends RecyclerView.Adapter<RecyclerCursorAd
                 public void onClick(View v) {
                     Intent intent = new Intent(mContext, DetailActivity.class);
                     intent.putExtra(ListBaseActivity.SELECTED_PLACE_KEY, id);
-                    intent.putExtra(ListBaseActivity.POSITION_KEY, position);
 
                     if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
                         ActivityOptionsCompat options = ActivityOptionsCompat
                                 .makeSceneTransitionAnimation(
                                         ((Activity) mContext),
                                         holder.mThumbnailImgView,
-                                        mContext.getString(R.string.card_transition_name) //+ position
+                                        mContext.getString(R.string.card_transition_name_image)
                                 );
                         ((Activity) mContext).startActivityForResult(intent, 0, options.toBundle());
                     } else {

@@ -68,6 +68,13 @@ public class DetailActivity extends AppCompatActivity {
                 imageView.setImageBitmap(image);
             }
 
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                imageView.setTransitionName(
+                        getString(R.string.card_transition_name) //+
+                        //getIntent().getExtras().getInt(ListBaseActivity.POSITION_KEY)
+                );
+            }
+
             TextView overviewView = (TextView) findViewById(R.id.detail_overview);
             String overviewText = selectedPlace.getCategory() + " | "
                     + selectedPlace.getLocation() + " | "

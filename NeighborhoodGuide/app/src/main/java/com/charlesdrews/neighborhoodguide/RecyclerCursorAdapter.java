@@ -3,6 +3,7 @@ package com.charlesdrews.neighborhoodguide;
 import android.animation.AnimatorInflater;
 import android.animation.StateListAnimator;
 import android.app.Activity;
+import android.app.ActivityOptions;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources;
@@ -12,6 +13,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.support.design.widget.Snackbar;
+import android.support.v4.app.ActivityOptionsCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
@@ -89,6 +91,11 @@ public class RecyclerCursorAdapter extends RecyclerView.Adapter<RecyclerCursorAd
                 // raise card on press (will only see if long press; on tap the details activity starts before animation complets)
                 StateListAnimator animator = AnimatorInflater.loadStateListAnimator(mContext, R.anim.raise);
                 holder.mCardView.setStateListAnimator(animator);
+
+                // set transitionName for image
+                holder.mThumbnailImgView.setTransitionName(
+                        mContext.getString(R.string.card_transition_name) //+ position
+                );
             }
 
             int imageRes = mContext.getResources().getIdentifier(
@@ -138,7 +145,19 @@ public class RecyclerCursorAdapter extends RecyclerView.Adapter<RecyclerCursorAd
                 public void onClick(View v) {
                     Intent intent = new Intent(mContext, DetailActivity.class);
                     intent.putExtra(ListBaseActivity.SELECTED_PLACE_KEY, id);
-                    ((Activity) mContext).startActivityForResult(intent, 0);
+                    intent.putExtra(ListBaseActivity.POSITION_KEY, position);
+
+                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+                        ActivityOptionsCompat options = ActivityOptionsCompat
+                                .makeSceneTransitionAnimation(
+                                        ((Activity) mContext),
+                                        holder.mThumbnailImgView,
+                                        mContext.getString(R.string.card_transition_name) //+ position
+                                );
+                        ((Activity) mContext).startActivityForResult(intent, 0, options.toBundle());
+                    } else {
+                        ((Activity) mContext).startActivityForResult(intent, 0);
+                    }
                 }
             });
         } else { // if mCursor.moveToPosition(position) fails

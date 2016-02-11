@@ -40,6 +40,7 @@ public abstract class ListBaseActivity extends AppCompatActivity {
     public static final String SELECTED_PLACE_KEY = "selected_place_key";
     public static final String CATEGORY_FILTER_VALUE_KEY = "category_filter_value_key";
     public static final String SEARCH_QUERY_KEY = "search_query_key";
+    public static final String POSITION_KEY = "position_key";
 
     protected Menu mMenu;
     protected SearchView mSearchView;

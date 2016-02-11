@@ -19,7 +19,6 @@ import android.support.v7.widget.RecyclerView;
 import android.text.Spannable;
 import android.text.Spanned;
 import android.text.style.StrikethroughSpan;
-import android.util.Pair;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -222,13 +221,6 @@ public class RecyclerCursorAdapter extends RecyclerView.Adapter<RecyclerCursorAd
 
         // launch a Snackbar to notify user of success/failure
         View rootView;
-        /*
-        if (mContextIsFavs) {
-            rootView = ((Activity) mContext).findViewById(R.id.coordinator_layout_favs);
-        } else {
-            rootView = ((Activity) mContext).findViewById(R.id.coordinator_layout_main);
-        }
-        */
         rootView = ((Activity) mContext).findViewById(R.id.coordinator_layout);
         Snackbar.make(rootView, msg, Snackbar.LENGTH_SHORT).show();
     }

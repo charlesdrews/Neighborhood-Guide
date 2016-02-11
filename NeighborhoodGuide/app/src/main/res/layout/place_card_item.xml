@@ -15,6 +15,7 @@
     <ImageView
         android:id="@+id/card_image"
         android:background="@color/detailToolbarBg"
+        android:contentDescription="@string/detail_image_content_desc"
         android:scaleType="centerCrop"
         android:layout_alignParentTop="true"
         android:layout_alignParentStart="true"
@@ -40,6 +41,8 @@
             android:text="@string/card_title"
             android:textSize="@dimen/card_title_font_size"
             android:textStyle="bold"
+            android:layout_toStartOf="@id/card_fav_icon"
+            android:layout_toLeftOf="@id/card_fav_icon"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
 

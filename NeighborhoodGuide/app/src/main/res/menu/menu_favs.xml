@@ -4,20 +4,20 @@
     tools:context="com.charlesdrews.neighborhoodguide.MainActivity">
 
     <item
-        android:id="@+id/action_search_favs"
+        android:id="@+id/action_search"
         android:icon="@drawable/ic_search_white_24dp"
         android:title="@string/action_search"
         app:actionViewClass="android.support.v7.widget.SearchView"
         app:showAsAction="collapseActionView|ifRoom" />
 
     <item
-        android:id="@+id/action_filter_favs"
+        android:id="@+id/action_filter"
         android:icon="@drawable/filter_outline"
         android:title="@string/action_filter"
         app:showAsAction="ifRoom" />
 
     <item
-        android:id="@+id/action_refresh_favs"
+        android:id="@+id/action_refresh"
         android:icon="@drawable/ic_refresh_white_24dp"
         android:title="@string/action_refresh"
         app:showAsAction="ifRoom" />

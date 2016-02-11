@@ -34,6 +34,7 @@ public class DetailActivity extends AppCompatActivity {
     private PlaceDbOpenHelper mHelper;
     private TextView mNoteView;
     private String mNoteDraft = "";
+    private boolean mChangeToFavStatus = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -136,6 +137,7 @@ public class DetailActivity extends AppCompatActivity {
                         } else {
                             msg = selectedPlace.getTitle() + " unfavorited";
                         }
+                        mChangeToFavStatus = !mChangeToFavStatus; // toggle to indicate change and allow change to be "undone" by next change
                     } else {
                         msg = ERR_MSG_FAVORITE_STATUS_NOT_SAVED;
                     }
@@ -153,12 +155,26 @@ public class DetailActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case android.R.id.home:
-                finish();
+                finishWithResultCode();
                 return true;
 
             default:
                 return super.onOptionsItemSelected(item);
         }
+    }
+
+    @Override
+    public void onBackPressed() {
+        finishWithResultCode();
+    }
+
+    private void finishWithResultCode() {
+        if (mChangeToFavStatus) {
+            setResult(RESULT_OK);
+        } else {
+            setResult(RESULT_CANCELED);
+        }
+        finish();
     }
 
     private void setFabFavIcon(FloatingActionButton fab, boolean isFavorite) {

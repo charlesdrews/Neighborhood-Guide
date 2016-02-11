@@ -1,6 +1,7 @@
 <resources>
     <string name="app_name">NeighborhoodGuide</string>
-    <string name="title_text">Neighborhood Guide</string>
+    <string name="title_text_main">Neighborhood Guide</string>
+    <string name="title_text_favs">Favorites</string>
     <string name="action_settings">Settings</string>
     <string name="action_favorites">Favorites</string>
     <string name="action_refresh">Refresh</string>

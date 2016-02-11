@@ -117,8 +117,8 @@ public class RecyclerCursorAdapter extends RecyclerView.Adapter<RecyclerCursorAd
                 @Override
                 public void onClick(View v) {
                     Intent intent = new Intent(mContext, DetailActivity.class);
-                    intent.putExtra(MainActivity.SELECTED_PLACE_KEY, id);
-                    mContext.startActivity(intent);
+                    intent.putExtra(ListBaseActivity.SELECTED_PLACE_KEY, id);
+                    ((Activity) mContext).startActivityForResult(intent, 0);
                 }
             });
         } else { // if mCursor.moveToPosition(position) fails
@@ -185,11 +185,14 @@ public class RecyclerCursorAdapter extends RecyclerView.Adapter<RecyclerCursorAd
 
         // launch a Snackbar to notify user of success/failure
         View rootView;
+        /*
         if (mContextIsFavs) {
             rootView = ((Activity) mContext).findViewById(R.id.coordinator_layout_favs);
         } else {
             rootView = ((Activity) mContext).findViewById(R.id.coordinator_layout_main);
         }
+        */
+        rootView = ((Activity) mContext).findViewById(R.id.coordinator_layout);
         Snackbar.make(rootView, msg, Snackbar.LENGTH_SHORT).show();
     }
 

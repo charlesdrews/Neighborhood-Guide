@@ -33,8 +33,8 @@ public class PlaceDbOpenHelper extends SQLiteOpenHelper {
     public static final String COL_RATING = "rating";
     public static final String COL_NOTE = "note";
 
-    private static final String[] SEARCH_RESULT_COLUMNS = new String[]{
-            COL_ID, COL_TITLE, COL_CATEGORY, COL_LOCATION, COL_NEIGHBORHOOD, COL_IS_FAVORITE};
+    private static final String[] SEARCH_RESULT_COLUMNS = new String[]{ COL_ID, COL_TITLE,
+            COL_CATEGORY, COL_LOCATION, COL_NEIGHBORHOOD, COL_IS_FAVORITE, COL_IMAGE_RES};
 
     private static final String SQL_DROP_PLACES_TABLE = "DROP TABLE IF EXISTS " + TABLE_NAME_PLACES;
     private static final String SQL_CREATE_PLACES_TABLE =

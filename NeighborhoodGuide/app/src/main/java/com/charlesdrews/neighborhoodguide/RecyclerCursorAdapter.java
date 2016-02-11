@@ -5,7 +5,10 @@ import android.animation.StateListAnimator;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.Resources;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.support.design.widget.Snackbar;
@@ -44,6 +47,7 @@ public class RecyclerCursorAdapter extends RecyclerView.Adapter<RecyclerCursorAd
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
         public CardView mCardView;
+        public ImageView mThumbnailImgView;
         public TextView mTitleTextView;
         public TextView mOverviewTextView;
         public ImageView mIconImgView;
@@ -51,6 +55,7 @@ public class RecyclerCursorAdapter extends RecyclerView.Adapter<RecyclerCursorAd
         public ViewHolder(View itemView) {
             super(itemView);
             mCardView = (CardView) itemView.findViewById(R.id.card_place);
+            mThumbnailImgView = (ImageView) itemView.findViewById(R.id.card_image);
             mTitleTextView = (TextView) itemView.findViewById(R.id.card_place_title);
             mOverviewTextView = (TextView) itemView.findViewById(R.id.card_place_overview);
             mIconImgView = (ImageView) itemView.findViewById(R.id.card_fav_icon);
@@ -84,6 +89,21 @@ public class RecyclerCursorAdapter extends RecyclerView.Adapter<RecyclerCursorAd
                 // raise card on press (will only see if long press; on tap the details activity starts before animation complets)
                 StateListAnimator animator = AnimatorInflater.loadStateListAnimator(mContext, R.anim.raise);
                 holder.mCardView.setStateListAnimator(animator);
+            }
+
+            int imageRes = mContext.getResources().getIdentifier(
+                    mCursor.getString(mCursor.getColumnIndex(PlaceDbOpenHelper.COL_IMAGE_RES)),
+                    "raw",
+                    mContext.getPackageName()
+            );
+            if (imageRes != 0) {
+                holder.mThumbnailImgView.setImageBitmap(
+                        decodeThumbnailBitmapFromRes(
+                                mContext.getResources(),
+                                imageRes,
+                                holder.mThumbnailImgView.getMaxHeight()
+                        )
+                );
             }
 
             String title = mCursor.getString(mCursor.getColumnIndex(PlaceDbOpenHelper.COL_TITLE));
@@ -210,5 +230,36 @@ public class RecyclerCursorAdapter extends RecyclerView.Adapter<RecyclerCursorAd
                 return mNonFavIcon;
             }
         }
+    }
+
+    public static int calculateInSampleSize(int sourceHeight, int sourceWidth, int thumbSize) {
+        int smallerSourceDimen = (sourceHeight < sourceWidth) ? sourceHeight : sourceWidth;
+        int inSampleSize = 1;
+
+        if (smallerSourceDimen > thumbSize) {
+            int halfDimen = smallerSourceDimen / 2;
+
+            // Calculate the largest inSampleSize value that is a power of 2 and keeps both
+            // height and width larger than the requested height and width.
+            while ((halfDimen / inSampleSize) > thumbSize) {
+                inSampleSize *= 2;
+            }
+        }
+        return inSampleSize;
+    }
+
+    public static Bitmap decodeThumbnailBitmapFromRes(Resources res, int resId, int thumbSize) {
+        BitmapFactory.Options options = new BitmapFactory.Options();
+
+        // get size of original image
+        options.inJustDecodeBounds = true;
+        BitmapFactory.decodeResource(res, resId, options);
+
+        // calculate inSampleSize
+        options.inSampleSize = calculateInSampleSize(options.outHeight, options.outWidth, thumbSize);
+
+        // decode bitmap at scaled down sample size
+        options.inJustDecodeBounds = false;
+        return BitmapFactory.decodeResource(res, resId, options);
     }
 }

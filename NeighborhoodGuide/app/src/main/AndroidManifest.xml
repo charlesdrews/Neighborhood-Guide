@@ -46,8 +46,5 @@
                 android:name="android.app.searchable"
                 android:resource="@xml/searchable" />
         </activity>
-        <meta-data
-            android:name="com.google.android.geo.API_KEY"
-            android:value="AIzaSyBngUIWNwuIXATwEpyZvMMXH3pDUUnxLe4" />
     </application>
 </manifest>

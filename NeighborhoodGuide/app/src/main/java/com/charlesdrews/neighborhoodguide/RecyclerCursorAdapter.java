@@ -97,7 +97,7 @@ public class RecyclerCursorAdapter extends RecyclerView.Adapter<RecyclerCursorAd
             }
 
             int imageRes = mContext.getResources().getIdentifier(
-                    mCursor.getString(mCursor.getColumnIndex(PlaceDbOpenHelper.COL_IMAGE_RES)),
+                    mCursor.getString(mCursor.getColumnIndex(PlaceDbOpenHelper.COL_IMAGE_RES)) + "_small",
                     "raw",
                     mContext.getPackageName()
             );

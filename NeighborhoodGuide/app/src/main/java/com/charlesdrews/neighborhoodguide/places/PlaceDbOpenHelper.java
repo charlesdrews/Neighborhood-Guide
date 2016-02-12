@@ -140,6 +140,13 @@ public class PlaceDbOpenHelper extends SQLiteOpenHelper {
         return getPlaces(true, category);
     }
 
+    /**
+     * Queries the db for places based on the user's search query, isFavorite status, and category
+     * @param query - the string the user entered in the SearchView
+     * @param favoritesOnly - indicates whether search is for all places (home screen) or favorites only (favorites screen)
+     * @param category - if filter is set, specify category to limit search results
+     * @return - a Cursor of db query results
+     */
     private Cursor searchPlaces(String query, boolean favoritesOnly, String category) {
         String[] queryTokens = query.split(" ");
 
@@ -214,6 +221,11 @@ public class PlaceDbOpenHelper extends SQLiteOpenHelper {
         return searchPlaces(query, true, category);
     }
 
+    /**
+     * Get one place from the database by the place's unique id
+     * @param id - unique id of the place to be returned
+     * @return - a Place object if the id exists in the database, otherwise null
+     */
     public Place getPlaceById(int id) {
         SQLiteDatabase db = getReadableDatabase();
         Cursor cursor = db.query(
@@ -320,6 +332,11 @@ public class PlaceDbOpenHelper extends SQLiteOpenHelper {
         return categories;
     }
 
+    /**
+     * Check whether a place, specified by it's unique id, is marked as a favorite in the database
+     * @param id - the unique id of the place to be checked
+     * @return - true if the place is found in the database and is marked as a favorite, otherwise false
+     */
     public boolean isFavoriteById(int id) {
         SQLiteDatabase db = getReadableDatabase();
         Cursor cursor = db.query(TABLE_NAME_PLACES,      // table

@@ -159,6 +159,12 @@ public abstract class ListBaseActivity extends AppCompatActivity {
         return true;
     }
 
+    /**
+     * On device rotation, need to update the SearchView to contain the same user input it had
+     * prior to rotation. Menu must be inflated before this can be done, so do this here.
+     * @param menu
+     * @return
+     */
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
         // once menu is set up, incorporate pre-existing filter & query values if present
@@ -205,6 +211,11 @@ public abstract class ListBaseActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Save filter value and/or user search input if either is present so they can be
+     * persisted after a device rotation
+     * @param outState
+     */
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
@@ -223,6 +234,13 @@ public abstract class ListBaseActivity extends AppCompatActivity {
         super.onDestroy();
     }
 
+    /**
+     * When returning from the detail activity, refresh the cursor if a change was made to a
+     * place's favorite status, otherwise no need to update the cursor
+     * @param requestCode
+     * @param resultCode
+     * @param data
+     */
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -240,6 +258,10 @@ public abstract class ListBaseActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Use an alert dialog to gather user input on which place category filter to apply, or whether
+     * to clear the filter.
+     */
     private void launchFilterDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Filter by category");
@@ -287,5 +309,10 @@ public abstract class ListBaseActivity extends AppCompatActivity {
         builder.show();
     }
 
+    /**
+     * Require each child class to implement this method - main activity should update the cursor
+     * to include all places, not just favorites while favorites activity should limit cursor to
+     * include only favorites
+     */
     protected abstract void changeAdapterCursor();
 }

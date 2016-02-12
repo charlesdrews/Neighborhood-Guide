@@ -6,6 +6,10 @@ package com.charlesdrews.neighborhoodguide;
  */
 public class MainActivity extends ListBaseActivity {
 
+    /**
+     * Use the database open helper methods with "AllPlaces" in the name in order to NOT restrict
+     * query results to favorites only
+     */
     @Override
     protected void changeAdapterCursor() {
         if (mCategoryFilterValue != null && mUserQuery != null) {

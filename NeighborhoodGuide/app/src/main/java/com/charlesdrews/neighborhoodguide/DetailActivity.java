@@ -25,6 +25,9 @@ import android.widget.TextView;
 import com.charlesdrews.neighborhoodguide.places.Place;
 import com.charlesdrews.neighborhoodguide.places.PlaceDbOpenHelper;
 
+/**
+ * Defines the UI of the detail screen
+ */
 public class DetailActivity extends AppCompatActivity {
     private static final String ERR_MSG_RATING_NOT_SAVED = "Database error: your rating was not saved";
     public static final String ERR_MSG_FAVORITE_STATUS_NOT_SAVED = "Database error: favorite status not saved";
@@ -170,6 +173,11 @@ public class DetailActivity extends AppCompatActivity {
         finishWithResultCode();
     }
 
+    /**
+     * If the favorite status of the selected place was changed, return RESULT_OK so the parent
+     * activity knows it must refresh its cursor, otherwise return RESULT_CANCELED so the parent
+     * activity can save the overhead and not update its cursor.
+     */
     private void finishWithResultCode() {
         if (mChangeToFavStatus) {
             setResult(RESULT_OK);
@@ -196,6 +204,12 @@ public class DetailActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * User alert dialog to gather input from user for a note to add to the selected place.
+     * Pre-populate input with existing note if present, or with a previously entered but not-saved
+     * note draft, if present.
+     * @param place - the place whose note will be added or edited
+     */
     private void  launchAddOrEditNoteDialog(final Place place) {
         AlertDialog.Builder builder = new AlertDialog.Builder(DetailActivity.this);
         final EditText input = new EditText(DetailActivity.this);

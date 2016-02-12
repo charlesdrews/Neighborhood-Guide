@@ -124,6 +124,8 @@ public class RecyclerCursorAdapter extends RecyclerView.Adapter<RecyclerCursorAd
             boolean isFav = (mCursor.getInt(mCursor.getColumnIndex(PlaceDbOpenHelper.COL_IS_FAVORITE)) == 1);
             holder.mIconImgView.setImageDrawable(pickIconDrawable(isFav));
 
+            // icon is within the card view - in order to not trigger the card view's onClick method
+            // when the icon is clicked, add an onTouch listener that consumes the whole click event
             holder.mIconImgView.setOnTouchListener(new View.OnTouchListener() {
                 @Override
                 public boolean onTouch(View v, MotionEvent event) {
@@ -187,6 +189,12 @@ public class RecyclerCursorAdapter extends RecyclerView.Adapter<RecyclerCursorAd
         oldCursor.close();
     }
 
+    /**
+     * Update both the database and the card view in response to the heart icon being clicked
+     * @param holder
+     * @param imgView
+     * @param id
+     */
     private void onIconImgViewClick(ViewHolder holder, ImageView imgView, int id) {
         // get isFavorite status of item
         boolean isFav = mHelper.isFavoriteById(id);
@@ -241,6 +249,14 @@ public class RecyclerCursorAdapter extends RecyclerView.Adapter<RecyclerCursorAd
         }
     }
 
+    /**
+     * Determine the factor by which to scale down the image resource for use as a thumbnail. Per
+     * Google, factor should be a power of 2.
+     * @param sourceHeight - original height in px of image resource
+     * @param sourceWidth - original width in px of image resource
+     * @param thumbSize - size in px of square thumbnail in card view
+     * @return
+     */
     public static int calculateInSampleSize(int sourceHeight, int sourceWidth, int thumbSize) {
         int smallerSourceDimen = (sourceHeight < sourceWidth) ? sourceHeight : sourceWidth;
         int inSampleSize = 1;
@@ -257,6 +273,14 @@ public class RecyclerCursorAdapter extends RecyclerView.Adapter<RecyclerCursorAd
         return inSampleSize;
     }
 
+    /**
+     * Retrieve bitmap from raw folder for use as thumbnail in card view. Scale image down to avoid
+     * overflowing memory.
+     * @param res - reference to app resources
+     * @param resId - id of specific image reference to be used
+     * @param thumbSize - size in px of the square thumbnail in the card view
+     * @return
+     */
     public static Bitmap decodeThumbnailBitmapFromRes(Resources res, int resId, int thumbSize) {
         BitmapFactory.Options options = new BitmapFactory.Options();
 

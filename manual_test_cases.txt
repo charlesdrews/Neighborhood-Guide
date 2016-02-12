@@ -1,0 +1,111 @@
+Charlie Drews
+Project 2 - Manual Test Cases
+
+
+Main Activity
+=============
+
+On startup the app will show all places in the database on the home screen
+
+Test 1: search functionality
+----------------------------
+Step 1: click search icon in toolbar                Expected: input box expands & keyboard appears
+Step 2: type search query                           Expected: search results appear and update on each key press (not just on submit)
+Step 3: include multiple words in search input      Expected: app searches for each word separately; words may appear in different database columns
+Step 4: click the "enter" button on keyboard        Expected: soft keyboard closes
+Step 5: click the X in the input box                Expected: input is cleared; results replaced by list of all places
+Step 6: click the back arrow next to input, or device back button
+                                                    Expected: input box closed; results replaced by list of all places
+Test 4: filter places
+---------------------
+Step 1: click the filter icon (funnel) in toolbar   Expected: popup appears with dropdown menu of place categories
+Step 2: select category & click "set filter"        Expected: popup closes and list updates to only include selected category; icon changes from outline to filled in
+Step 3: select category but click outside popup     Expected: popup closes and list is not changed (i.e. cancel the filtering)
+Step 4: click filter icon; click "clear filter"     Expected: popup closes and filter is removed from list (all places shown); icon changes from filled in to outline
+Step 5: select "All" from dropdown & "set filter"   Expected: same result as clicking "clear filter"
+
+Test 5: combine search & filter
+-------------------------------
+Step 1: do a search then add filter (via overflow menu)
+                                                    Expected: search is preserved & filter applied to search results
+Step 2: Add a filter, then enter a search           Expected: filter is preserved & search restricted to items meeting filter criterion
+
+Test 6: rotate device
+---------------------
+Step 1: do a search, then rotate device             Expected: search query remains in input box; results remain the same
+Step 2: add a filter, then rotate device            Expected: filter remains in place; results remain the same
+Step 3: do a search and a filter, then rotate       Expected: both search & filter preserved; results remain the same
+
+Test 7: favorite or un-favorite a place
+---------------------------------------
+Step 1: click a heart outline icon of a place       Expected: icon changes to filled in; snackbar notifies that item was favorited
+Step 2: click a filled-in heart icon of a place     Expected: icon changes to outline; snackbar notifies that item was un-favorited
+
+
+Favorites Activity
+==================
+
+Test 1: navigate to favorites screen
+------------------------------------
+Step 1: click heart icon in home screen toolbar     Expected: favorites activity launched, shows all places marked as fav in database
+
+Test 2: search
+--------------
+Step 1: click search icon in toolbar; type input    Expected: same search functionality as home screen w/ results limited to favorite places
+
+Test 3: filter
+--------------
+Step 1: click filter icon; add/remove filter        Expected: same filter functionality as home screen w/ results limited to favorite places
+
+Test 4: rotate device
+---------------------
+Step 1: search and/or filter then rotate device     Expected: search & filter preserved like on home screen w/ results limited to favorite places
+
+Test 5: un-favorite a place
+---------------------------
+Step 1: click the minus icon of a place             Expected: place's card turns grey, text is struck thru, icon changes to a plus; success noted via snackbar
+Step 2: click the refresh icon in the toolbar       Expected: places that were un-favorited are removed from the list; success noted via snackbar
+
+Test 6: re-favorite a place
+---------------------------
+Step 1: before clicking the refresh icon, click a grey, un-favorited places' plus icon
+                                                    Expected: place's card turns back to white, text no longer struck thru, icon changes back to minus; success noted via snackbar; place now remains even after a refresh of favs
+
+Test 7: navigate back to home screen
+------------------------------------
+Step 1: click the back arrow in the upper left (or device's back button)
+                                                    Expected: home screen reappears; if home screen had an active search or filter they are preserved
+
+
+Detail Activity
+===============
+
+Test 1: navigate to detail screen
+---------------------------------
+Step 1: click on a place from in home or favs screen    Expected: detail screen launches w/ transition animation from thumbnail in list to top image on detail screen
+                                                     Expected: (continued) detail screen shows all saved detail for that place, including previously submitted favorite status, rating, note
+
+Test 2: favorite or un-favorite the selected place
+--------------------------------------------------
+Step 1: click the floating button w/ heart outline      Expected: heart icon fills in; snackbar notifies that place was favorited
+Step 2: click the floating button w/ filled in heart    Expected: heart icon switches to outline only; snackbar notifies that place was un-favorited
+
+Test 3: add or edit a rating
+----------------------------
+Step 1: click or slide finger along the stars           Expected: stars fill in according to where user tapped; snackbar notifies of exact rating number set for place
+Step 2: view place again after setting rating in past   Expected: the stars show the prior rating, which was saved in the database
+
+Test 4: add or edit a note
+--------------------------
+Step 1: click the "Click to add a note" text            Expected: popup launches w/ a text input box
+Step 2: enter text in popup, then Cancel                Expected: popup closes; draft input text is not saved; detail screen not changed
+Step 3: enter text in popup, then click outside popup   Expected: popup closes; draft input saved in background; detail screen not changed
+Step 3: launch the popup again                          Expected: popup launches w/ input box pre-populated w/ draft text
+Step 4: finish entering text, click OK                  Expected: popup close, note appears in detail screen, snackbar notifies that note was saved
+Step 5: click existing note                             Expected: popup launches w/ input box pre-populated w/ existing note
+Step 6: edit or delete existing note, click OK          Expected: popup closes, modified note appears in detail screen, snackbar notifies that note was saved
+
+Test 5: navigate back to prior screen
+-------------------------------------
+Step 1: click back arrow in the top left                Expected: app goes back to prior screen whether that was home or favorites
+                                                        Expected: (continued) any changes made on detail screen are saved in database and shown again next time that place is clicked

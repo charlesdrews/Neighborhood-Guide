@@ -1,8 +1,9 @@
 #####Charles Drews
-App features are noted below with screenshots. See manual_test_cases.txt for a listing of user stories and expected results. The project includes unit tests for my Place class methods in the PlaceTest class.
 
 Project 2 - Neighborhood Guide App
 =============
+
+App features are noted below with screenshots. See manual_test_cases.txt for a listing of user stories and expected results. The project includes unit tests for my Place class methods in the PlaceTest class.
 
 <img src="screenshots/home_search.png" alt="home screen w/ search" width="200px" />
 <img src="screenshots/home_filter.png" alt="home screen w/ filter" width="200px" />

@@ -159,6 +159,15 @@ public class RecyclerCursorAdapter extends RecyclerView.Adapter<RecyclerCursorAd
                     }
                 }
             });
+
+            // set content descriptions
+            if (isFav) {
+                holder.mIconImgView.setContentDescription("Icon indicating this place is a favorite.");
+            } else {
+                holder.mIconImgView.setContentDescription("Icon indicating this place is not a favorite.");
+            }
+            holder.mThumbnailImgView.setContentDescription("Image of " + holder.mTitleTextView.getText());
+
         } else { // if mCursor.moveToPosition(position) fails
             holder.mTitleTextView.setText(ERR_MSG_ITEM_NOT_FOUND);
         }

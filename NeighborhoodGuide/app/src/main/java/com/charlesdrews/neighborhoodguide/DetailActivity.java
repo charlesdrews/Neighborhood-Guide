@@ -118,6 +118,14 @@ public class DetailActivity extends AppCompatActivity {
                     } else {
                         msg = ERR_MSG_RATING_NOT_SAVED;
                     }
+
+                    // reset content description
+                    if (ratingBar.getRating() > 0) {
+                        ratingBar.setContentDescription("Rating bar: give this place a rating of 0 to 5 stars. Current rating is " + rating);
+                    } else {
+                        ratingBar.setContentDescription("Rating bar: give this place a rating of 0 to 5 stars. No rating set.");
+                    }
+
                     Snackbar.make(
                             findViewById(R.id.coordinator_layout_detail),
                             msg,
@@ -147,9 +155,32 @@ public class DetailActivity extends AppCompatActivity {
                     } else {
                         msg = ERR_MSG_FAVORITE_STATUS_NOT_SAVED;
                     }
+
+                    // reset content descriptions on click
+                    if (selectedPlace.isFavorite()) {
+                        fab.setContentDescription("Click to remove this place from favorites");
+                    } else {
+                        fab.setContentDescription("Click to add this place to favorites");
+                    }
+
                     Snackbar.make(view, msg, Snackbar.LENGTH_SHORT).show();
                 }
             });
+
+            // set content descriptions
+            toolbar.setContentDescription(selectedPlace.getTitle());
+            if (ratingBar.getRating() > 0) {
+                ratingBar.setContentDescription("Rating bar: give this place a rating of 0 to 5 stars. Current rating is " + ratingBar.getRating());
+            } else {
+                ratingBar.setContentDescription("Rating bar: give this place a rating of 0 to 5 stars. No rating set.");
+            }
+
+            if (selectedPlace.isFavorite()) {
+                fab.setContentDescription("Click to remove this place from favorites");
+            } else {
+                fab.setContentDescription("Click to add this place to favorites");
+            }
+
         } else {
             TextView locationView = (TextView) findViewById(R.id.detail_overview);
             locationView.setText(getString(R.string.err_msg_item_not_found));
@@ -226,6 +257,13 @@ public class DetailActivity extends AppCompatActivity {
             input.setText(mNoteDraft);
         }
 
+        // set content description
+        if (input.getText().toString().isEmpty()) {
+            input.setContentDescription("Input for your note. Input is currently blank.");
+        } else {
+            input.setContentDescription("Input for your note. Current text in input is " + input.getText());
+        }
+
         input.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
@@ -259,6 +297,7 @@ public class DetailActivity extends AppCompatActivity {
                 if (mHelper.setNoteById(place.getId(), note)) {
                     if (note.isEmpty()) {
                         mNoteView.setText(getString(R.string.detail_msg_click_to_add_note));
+                        mNoteView.setHint("Enter a note to add it to this place");
                     } else {
                         note = "Your note: " + note;
                         mNoteView.setText(note);

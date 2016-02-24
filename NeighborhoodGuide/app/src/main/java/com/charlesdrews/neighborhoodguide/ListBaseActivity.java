@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
@@ -42,42 +43,48 @@ public abstract class ListBaseActivity extends AppCompatActivity {
     public static final String SEARCH_QUERY_KEY = "search_query_key";
 
     protected Menu mMenu;
-    protected SearchView mSearchView;
     protected PlaceDbOpenHelper mHelper;
     protected RecyclerCursorAdapter mAdapter;
     protected String mCategoryFilterValue;
     protected String mUserQuery;
-    protected boolean mMenuLoading = true;
+
+    private SearchView mSearchView;
+    private Cursor mCursor;
+    private RecyclerView mRecyclerView;
+    private boolean mMenuLoading = true;
+    private ArrayList<String> mCategories;
+    private Spinner mSpinner;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // set up DB Asset Helper & Open Helper
-        PlaceDbAssetHelper dbAssetHelper = new PlaceDbAssetHelper(this);
-        dbAssetHelper.getReadableDatabase();
-        mHelper = PlaceDbOpenHelper.getInstance(this);
-
         // set values that differ between Main and Favorites activities
         boolean isFavoritesActivity;
         String titleText;
         int statusBarColorRes;
-        final Cursor cursor;
 
-        if (this instanceof MainActivity) {
+        if (ListBaseActivity.this instanceof MainActivity) {
             isFavoritesActivity = false;
             setContentView(R.layout.activity_main);
             titleText = getString(R.string.title_text_main);
             statusBarColorRes = R.color.mainStatusBar;
-            cursor = mHelper.getAllPlaces();
         } else { // if not MainActivity, then its FavoritesActivity
             isFavoritesActivity = true;
             setContentView(R.layout.activity_favorites);
             titleText = getString(R.string.title_text_favs);
             statusBarColorRes = R.color.favsStatusBar;
-            cursor = mHelper.getFavoritePlaces();
-
         }
+
+        // set up recycler view
+        mRecyclerView = (RecyclerView) findViewById(R.id.recycler_view);
+        mRecyclerView.setHasFixedSize(true);
+        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(ListBaseActivity.this);
+        mRecyclerView.setLayoutManager(linearLayoutManager);
+
+        // update mCursor and set adapter on worker thread
+        GetCursorAndSetAdapterAsyncTask task = new GetCursorAndSetAdapterAsyncTask();
+        task.execute(isFavoritesActivity);
 
         // set up toolbar
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -87,15 +94,6 @@ public abstract class ListBaseActivity extends AppCompatActivity {
             getSupportActionBar().setDisplayHomeAsUpEnabled(isFavoritesActivity);
         }
         setStatusBarColor(statusBarColorRes);
-
-        // set up recycler view
-        RecyclerView recyclerView = (RecyclerView) findViewById(R.id.recycler_view);
-        recyclerView.setHasFixedSize(true);
-        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
-        recyclerView.setLayoutManager(linearLayoutManager);
-
-        mAdapter = new RecyclerCursorAdapter(this, cursor);
-        recyclerView.setAdapter(mAdapter);
 
         // retrieve saved instance state values (if any)
         if (savedInstanceState != null) {
@@ -107,7 +105,7 @@ public abstract class ListBaseActivity extends AppCompatActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // inflate the appropriate menu for Main or Favorites activity
-        if (this instanceof MainActivity) {
+        if (ListBaseActivity.this instanceof MainActivity) {
             getMenuInflater().inflate(R.menu.menu_main, menu);
         } else {
             getMenuInflater().inflate(R.menu.menu_favs, menu);
@@ -162,8 +160,6 @@ public abstract class ListBaseActivity extends AppCompatActivity {
     /**
      * On device rotation, need to update the SearchView to contain the same user input it had
      * prior to rotation. Menu must be inflated before this can be done, so do this here.
-     * @param menu
-     * @return
      */
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
@@ -189,7 +185,7 @@ public abstract class ListBaseActivity extends AppCompatActivity {
                 return true;
 
             case R.id.action_favorites:
-                Intent intent = new Intent(this, FavoritesActivity.class);
+                Intent intent = new Intent(ListBaseActivity.this, FavoritesActivity.class);
                 startActivity(intent);
                 return true;
 
@@ -203,7 +199,7 @@ public abstract class ListBaseActivity extends AppCompatActivity {
                 return true;
 
             case android.R.id.home:
-                NavUtils.navigateUpFromSameTask(this);
+                NavUtils.navigateUpFromSameTask(ListBaseActivity.this);
                 return true;
 
             default:
@@ -214,7 +210,6 @@ public abstract class ListBaseActivity extends AppCompatActivity {
     /**
      * Save filter value and/or user search input if either is present so they can be
      * persisted after a device rotation
-     * @param outState
      */
     @Override
     protected void onSaveInstanceState(Bundle outState) {
@@ -237,9 +232,6 @@ public abstract class ListBaseActivity extends AppCompatActivity {
     /**
      * When returning from the detail activity, refresh the cursor if a change was made to a
      * place's favorite status, otherwise no need to update the cursor
-     * @param requestCode
-     * @param resultCode
-     * @param data
      */
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -251,10 +243,10 @@ public abstract class ListBaseActivity extends AppCompatActivity {
 
     private void setStatusBarColor(int colorResource) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            Window window = this.getWindow();
+            Window window = ListBaseActivity.this.getWindow();
             window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
             window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
-            window.setStatusBarColor(ContextCompat.getColor(this, colorResource));
+            window.setStatusBarColor(ContextCompat.getColor(ListBaseActivity.this, colorResource));
         }
     }
 
@@ -263,34 +255,25 @@ public abstract class ListBaseActivity extends AppCompatActivity {
      * to clear the filter.
      */
     private void launchFilterDialog() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        AlertDialog.Builder builder = new AlertDialog.Builder(ListBaseActivity.this);
         builder.setTitle("Filter by category");
 
-        final Spinner spinner = new Spinner(this);
+        mSpinner = new Spinner(ListBaseActivity.this);
 
-        ArrayList<String> categories = mHelper.getCategories();
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(
-                this,
-                android.R.layout.simple_spinner_item,
-                categories
-        );
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        spinner.setAdapter(adapter);
+        // get list of categories & set up spinner & adapter on worker thread
+        GetCategoriesAsyncTask task = new GetCategoriesAsyncTask();
+        task.execute();
 
-        if (mCategoryFilterValue != null) {
-            spinner.setSelection(categories.indexOf(mCategoryFilterValue));
-        }
-
-        RelativeLayout relativeLayout = new RelativeLayout(this);
+        RelativeLayout relativeLayout = new RelativeLayout(ListBaseActivity.this);
         relativeLayout.setPadding(0, 40, 0, 0); // left, top, right, bottom
         relativeLayout.setGravity(Gravity.CENTER);
-        relativeLayout.addView(spinner);
+        relativeLayout.addView(mSpinner);
         builder.setView(relativeLayout);
 
         builder.setPositiveButton("Set Filter", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                mCategoryFilterValue = spinner.getSelectedItem().toString();
+                mCategoryFilterValue = mSpinner.getSelectedItem().toString();
                 if (mCategoryFilterValue.equals("All")) {
                     mCategoryFilterValue = null;
                 }
@@ -315,4 +298,58 @@ public abstract class ListBaseActivity extends AppCompatActivity {
      * include only favorites
      */
     protected abstract void changeAdapterCursor();
+
+
+    private class GetCursorAndSetAdapterAsyncTask extends AsyncTask<Boolean, Void, Void> {
+
+        @Override
+        protected Void doInBackground(Boolean... params) {
+            // set up DB Asset Helper & Open Helper
+            PlaceDbAssetHelper dbAssetHelper = new PlaceDbAssetHelper(ListBaseActivity.this);
+            dbAssetHelper.getReadableDatabase();
+            mHelper = PlaceDbOpenHelper.getInstance(ListBaseActivity.this);
+
+            // params[0] = true if this is instance of FavoritesActivity, else false
+            if (params[0]) {
+                mCursor = mHelper.getFavoritePlaces();
+            } else {
+                mCursor = mHelper.getAllPlaces();
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+            mAdapter = new RecyclerCursorAdapter(ListBaseActivity.this, mCursor);
+            mRecyclerView.setAdapter(mAdapter);
+        }
+    }
+
+    private class GetCategoriesAsyncTask extends AsyncTask<Void, Void, Void> {
+
+        @Override
+        protected Void doInBackground(Void... params) {
+            mCategories = mHelper.getCategories();
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+
+            ArrayAdapter<String> adapter = new ArrayAdapter<>(
+                    ListBaseActivity.this,
+                    android.R.layout.simple_spinner_item,
+                    mCategories
+            );
+            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+            mSpinner.setAdapter(adapter);
+
+            if (mCategoryFilterValue != null) {
+                mSpinner.setSelection(mCategories.indexOf(mCategoryFilterValue));
+            }
+
+        }
+    }
 }

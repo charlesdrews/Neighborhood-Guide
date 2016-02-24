@@ -10,10 +10,12 @@ import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.Drawable;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityOptionsCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.util.Pair;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
 import android.text.Spannable;
@@ -133,7 +135,8 @@ public class RecyclerCursorAdapter extends RecyclerView.Adapter<RecyclerCursorAd
                         case MotionEvent.ACTION_DOWN:
                             return true;
                         case MotionEvent.ACTION_UP:
-                            onIconImgViewClick(holder, ((ImageView) v), id);
+                            UpdateIconImgAsyncTask task = new UpdateIconImgAsyncTask(holder);
+                            task.execute(id);
                             return true; // this consumes the entire touch event; will not trigger CardView's onclick()
                     }
                     return false;
@@ -198,50 +201,6 @@ public class RecyclerCursorAdapter extends RecyclerView.Adapter<RecyclerCursorAd
         oldCursor.close();
     }
 
-    /**
-     * Update both the database and the card view in response to the heart icon being clicked
-     * @param holder
-     * @param imgView
-     * @param id
-     */
-    private void onIconImgViewClick(ViewHolder holder, ImageView imgView, int id) {
-        // get isFavorite status of item
-        boolean isFav = mHelper.isFavoriteById(id);
-        String msg;
-
-        // toggle isFavorite status in database (and local indicator)
-        if (mHelper.setFavoriteStatusById(id, !isFav)) {
-            isFav = !isFav;
-
-            // set icon
-            imgView.setImageDrawable(pickIconDrawable(isFav));
-
-            // set text strikethru if context is favs & item is un-faved, otherwise not strikethru
-            // also set card background to same grey as recyclerview background
-            Spannable titleSpannable = (Spannable) holder.mTitleTextView.getText();
-            Spannable overviewSpannable = (Spannable) holder.mOverviewTextView.getText();
-
-            if (mContextIsFavs & !isFav) {
-                titleSpannable.setSpan(STRIKE_THROUGH_SPAN, 0, titleSpannable.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-                overviewSpannable.setSpan(STRIKE_THROUGH_SPAN, 0, overviewSpannable.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-                holder.mCardView.setCardBackgroundColor(ContextCompat.getColor(mContext, R.color.cardUnFavedBg));
-            } else {
-                titleSpannable.removeSpan(STRIKE_THROUGH_SPAN);
-                overviewSpannable.removeSpan(STRIKE_THROUGH_SPAN);
-                holder.mCardView.setCardBackgroundColor(ContextCompat.getColor(mContext, R.color.cardBg));
-            }
-
-            msg = holder.mTitleTextView.getText().toString() + (isFav ? " favorited" : " unfavorited");
-        } else {
-            msg = DetailActivity.ERR_MSG_FAVORITE_STATUS_NOT_SAVED;
-        }
-
-        // launch a Snackbar to notify user of success/failure
-        View rootView;
-        rootView = ((Activity) mContext).findViewById(R.id.coordinator_layout);
-        Snackbar.make(rootView, msg, Snackbar.LENGTH_SHORT).show();
-    }
-
     private Drawable pickIconDrawable(boolean isFav) {
         if (isFav) {
             if (mContextIsFavs) {
@@ -264,7 +223,7 @@ public class RecyclerCursorAdapter extends RecyclerView.Adapter<RecyclerCursorAd
      * @param sourceHeight - original height in px of image resource
      * @param sourceWidth - original width in px of image resource
      * @param thumbSize - size in px of square thumbnail in card view
-     * @return
+     * @return - int factor to use for scaling
      */
     public static int calculateInSampleSize(int sourceHeight, int sourceWidth, int thumbSize) {
         int smallerSourceDimen = (sourceHeight < sourceWidth) ? sourceHeight : sourceWidth;
@@ -288,7 +247,7 @@ public class RecyclerCursorAdapter extends RecyclerView.Adapter<RecyclerCursorAd
      * @param res - reference to app resources
      * @param resId - id of specific image reference to be used
      * @param thumbSize - size in px of the square thumbnail in the card view
-     * @return
+     * @return - bitmap to be used as a thumbnail
      */
     public static Bitmap decodeThumbnailBitmapFromRes(Resources res, int resId, int thumbSize) {
         BitmapFactory.Options options = new BitmapFactory.Options();
@@ -303,5 +262,64 @@ public class RecyclerCursorAdapter extends RecyclerView.Adapter<RecyclerCursorAd
         // decode bitmap at scaled down sample size
         options.inJustDecodeBounds = false;
         return BitmapFactory.decodeResource(res, resId, options);
+    }
+
+    /**
+     * Update both the database and the card view in response to the heart icon being clicked
+     */
+    private class UpdateIconImgAsyncTask
+            extends AsyncTask<Integer, Void, Pair<Boolean, Boolean>> {
+        private ViewHolder mViewHolder;
+
+        public UpdateIconImgAsyncTask(ViewHolder viewHolder) {
+            mViewHolder = viewHolder;
+        }
+
+        @Override
+        protected Pair<Boolean, Boolean> doInBackground(Integer... params) {
+            int id = params[0];
+            boolean isFav = !mHelper.isFavoriteById(id); // toggle fav status - get opposite of current
+            boolean updateSuccessful = mHelper.setFavoriteStatusById(id, isFav);
+            return new Pair<>(updateSuccessful, isFav);
+        }
+
+        @Override
+        protected void onPostExecute(Pair<Boolean, Boolean> successAndFavStatus) {
+            super.onPostExecute(successAndFavStatus);
+
+            boolean updateSuccessful = successAndFavStatus.first;
+            boolean isFav = successAndFavStatus.second;
+
+            String msg;
+            if (updateSuccessful) {
+
+                // set icon
+                mViewHolder.mIconImgView.setImageDrawable(pickIconDrawable(isFav));
+
+                // set text strikethru if context is favs & item is un-faved, otherwise not strikethru
+                // also set card background to same grey as recyclerview background
+                Spannable titleSpannable = (Spannable) mViewHolder.mTitleTextView.getText();
+                Spannable overviewSpannable = (Spannable) mViewHolder.mOverviewTextView.getText();
+
+                if (mContextIsFavs & !isFav) {
+                    titleSpannable.setSpan(STRIKE_THROUGH_SPAN, 0, titleSpannable.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                    overviewSpannable.setSpan(STRIKE_THROUGH_SPAN, 0, overviewSpannable.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                    mViewHolder.mCardView.setCardBackgroundColor(ContextCompat.getColor(mContext, R.color.cardUnFavedBg));
+                } else {
+                    titleSpannable.removeSpan(STRIKE_THROUGH_SPAN);
+                    overviewSpannable.removeSpan(STRIKE_THROUGH_SPAN);
+                    mViewHolder.mCardView.setCardBackgroundColor(ContextCompat.getColor(mContext, R.color.cardBg));
+                }
+
+                msg = mViewHolder.mTitleTextView.getText().toString() + (isFav ? " favorited" : " unfavorited");
+            } else {
+                msg = DetailActivity.ERR_MSG_FAVORITE_STATUS_NOT_SAVED;
+            }
+
+            // launch a Snackbar to notify user of success/failure
+            View rootView;
+            rootView = ((Activity) mContext).findViewById(R.id.coordinator_layout);
+            Snackbar.make(rootView, msg, Snackbar.LENGTH_SHORT).show();
+        }
     }
 }

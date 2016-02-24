@@ -4,6 +4,7 @@ import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
@@ -33,9 +34,14 @@ public class DetailActivity extends AppCompatActivity {
     public static final String ERR_MSG_FAVORITE_STATUS_NOT_SAVED = "Database error: favorite status not saved";
     public static final String ERR_MSG_NOTE_NOT_SAVED = "Database error: your note was not saved";
 
+    private Toolbar mToolbar;
     private int mSelectedPlaceId;
+    private Place mSelectedPlace;
     private PlaceDbOpenHelper mHelper;
-    private TextView mNoteView;
+    private ImageView mImageView;
+    private TextView mOverviewView, mNoteView, mDescriptionView;
+    private RatingBar mRatingBar;
+    private FloatingActionButton mFab;
     private String mNoteDraft = "";
     private boolean mChangeToFavStatus = false;
 
@@ -44,146 +50,56 @@ public class DetailActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_detail);
 
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar_main);
-        setSupportActionBar(toolbar);
+        mToolbar = (Toolbar) findViewById(R.id.toolbar_main);
+        setSupportActionBar(mToolbar);
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         }
         setStatusBarColor(R.color.detailStatusBar);
 
+        mImageView = (ImageView) findViewById(R.id.detail_image_view);
+        mOverviewView = (TextView) findViewById(R.id.detail_overview);
+        mNoteView = (TextView) findViewById(R.id.detail_note);
+        mDescriptionView = (TextView) findViewById(R.id.detail_description);
+        mRatingBar = (RatingBar) findViewById(R.id.detail_rating_bar);
+        mFab = (FloatingActionButton) findViewById(R.id.fab);
+
         mSelectedPlaceId = getIntent().getExtras().getInt(MainActivity.SELECTED_PLACE_KEY, -1);
 
         if (mSelectedPlaceId >= 0) {
 
-            mHelper = PlaceDbOpenHelper.getInstance(DetailActivity.this);
-            final Place selectedPlace = mHelper.getPlaceById(mSelectedPlaceId);
+            GetSelectedPlaceAndSetViewsAsyncTask task = new GetSelectedPlaceAndSetViewsAsyncTask();
+            task.execute();
 
-            getSupportActionBar().setTitle(selectedPlace.getTitle());
-
-            ImageView imageView = (ImageView) findViewById(R.id.detail_image_view);
-            int resId = getResources().getIdentifier(
-                    selectedPlace.getImageRes(),    // file name w/o extension
-                    "raw",                          // file stored in res/raw/
-                    getPackageName()
-            );
-            if (resId != 0) { // getIdentifier returns 0 if resource not found
-                Bitmap image = BitmapFactory.decodeResource(getResources(), resId);
-                imageView.setImageBitmap(image);
-            }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                imageView.setTransitionName(getString(R.string.card_transition_name_image));
+                mImageView.setTransitionName(getString(R.string.card_transition_name_image));
             }
 
-            TextView overviewView = (TextView) findViewById(R.id.detail_overview);
-            String overviewText = selectedPlace.getCategory() + " | "
-                    + selectedPlace.getLocation() + " | "
-                    + selectedPlace.getNeighborhood();
-            overviewView.setText(overviewText);
-
-            mNoteView = (TextView) findViewById(R.id.detail_note);
-            if (selectedPlace.getNote().isEmpty()) {
-                mNoteView.setText(getString(R.string.detail_msg_click_to_add_note));
-            } else {
-                String note = "Your note: " + selectedPlace.getNote();
-                mNoteView.setText(note);
-            }
             mNoteView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    launchAddOrEditNoteDialog(selectedPlace);
+                    launchAddOrEditNoteDialog();
                 }
             });
 
-            TextView descriptionView = (TextView) findViewById(R.id.detail_description);
-            descriptionView.setText(selectedPlace.getDescription());
-
-            if (!selectedPlace.getImageCredit().isEmpty()) {
-                String credit = "Photo credit: " + selectedPlace.getImageCredit();
-                TextView imageCreditView = (TextView) findViewById(R.id.detail_image_credit);
-                imageCreditView.setText(credit);
-            }
-
-            RatingBar ratingBar = (RatingBar) findViewById(R.id.detail_rating_bar);
-            ratingBar.setRating(selectedPlace.getRating());
-
-            ratingBar.setOnRatingBarChangeListener(new RatingBar.OnRatingBarChangeListener() {
+            mRatingBar.setOnRatingBarChangeListener(new RatingBar.OnRatingBarChangeListener() {
                 @Override
                 public void onRatingChanged(RatingBar ratingBar, float rating, boolean fromUser) {
-                    selectedPlace.setRating(rating);
-                    String msg;
-
-                    if (mHelper.setRatingById(mSelectedPlaceId, rating)) {
-                        msg = "Your rating of " + rating + " stars was saved for "
-                                + selectedPlace.getTitle();
-                    } else {
-                        msg = ERR_MSG_RATING_NOT_SAVED;
-                    }
-
-                    // reset content description
-                    if (ratingBar.getRating() > 0) {
-                        ratingBar.setContentDescription("Rating bar: give this place a rating of 0 to 5 stars. Current rating is " + rating);
-                    } else {
-                        ratingBar.setContentDescription("Rating bar: give this place a rating of 0 to 5 stars. No rating set.");
-                    }
-
-                    Snackbar.make(
-                            findViewById(R.id.coordinator_layout_detail),
-                            msg,
-                            Snackbar.LENGTH_SHORT
-                    ).show();
+                    UpdateRatingAsyncTask task = new UpdateRatingAsyncTask();
+                    task.execute(rating);
                 }
             });
 
-            final FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-            setFabFavIcon(fab, selectedPlace.isFavorite());
-
-            fab.setOnClickListener(new View.OnClickListener() {
+            mFab.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    boolean isFavorite = !selectedPlace.isFavorite(); // toggle to opposite value
-                    selectedPlace.setFavoriteStatus(isFavorite);
-                    String msg;
-
-                    if (mHelper.setFavoriteStatusById(mSelectedPlaceId, isFavorite)) {
-                        setFabFavIcon(fab, isFavorite);
-                        if (isFavorite) {
-                            msg = selectedPlace.getTitle() + " favorited";
-                        } else {
-                            msg = selectedPlace.getTitle() + " unfavorited";
-                        }
-                        mChangeToFavStatus = !mChangeToFavStatus; // toggle to indicate change and allow change to be "undone" by next change
-                    } else {
-                        msg = ERR_MSG_FAVORITE_STATUS_NOT_SAVED;
-                    }
-
-                    // reset content descriptions on click
-                    if (selectedPlace.isFavorite()) {
-                        fab.setContentDescription("Click to remove this place from favorites");
-                    } else {
-                        fab.setContentDescription("Click to add this place to favorites");
-                    }
-
-                    Snackbar.make(view, msg, Snackbar.LENGTH_SHORT).show();
+                    UpdateFavStatusAsyncClass task = new UpdateFavStatusAsyncClass();
+                    task.execute();
                 }
             });
 
-            // set content descriptions
-            toolbar.setContentDescription(selectedPlace.getTitle());
-            if (ratingBar.getRating() > 0) {
-                ratingBar.setContentDescription("Rating bar: give this place a rating of 0 to 5 stars. Current rating is " + ratingBar.getRating());
-            } else {
-                ratingBar.setContentDescription("Rating bar: give this place a rating of 0 to 5 stars. No rating set.");
-            }
-
-            if (selectedPlace.isFavorite()) {
-                fab.setContentDescription("Click to remove this place from favorites");
-            } else {
-                fab.setContentDescription("Click to add this place to favorites");
-            }
-
         } else {
-            TextView locationView = (TextView) findViewById(R.id.detail_overview);
-            locationView.setText(getString(R.string.err_msg_item_not_found));
+            mOverviewView.setText(getString(R.string.err_msg_item_not_found));
         }
     }
 
@@ -218,11 +134,11 @@ public class DetailActivity extends AppCompatActivity {
         finish();
     }
 
-    private void setFabFavIcon(FloatingActionButton fab, boolean isFavorite) {
-        if (isFavorite) {
-            fab.setImageResource(R.drawable.ic_favorite_white_24dp); // filled in heart if favorite
+    private void setFabFavIcon() {
+        if (mSelectedPlace.isFavorite()) {
+            mFab.setImageResource(R.drawable.ic_favorite_white_24dp); // filled in heart if favorite
         } else {
-            fab.setImageResource(R.drawable.ic_favorite_border_white_24dp); // otherwise just outline
+            mFab.setImageResource(R.drawable.ic_favorite_border_white_24dp); // otherwise just outline
         }
     }
 
@@ -239,20 +155,19 @@ public class DetailActivity extends AppCompatActivity {
      * User alert dialog to gather input from user for a note to add to the selected place.
      * Pre-populate input with existing note if present, or with a previously entered but not-saved
      * note draft, if present.
-     * @param place - the place whose note will be added or edited
      */
-    private void  launchAddOrEditNoteDialog(final Place place) {
+    private void  launchAddOrEditNoteDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(DetailActivity.this);
         final EditText input = new EditText(DetailActivity.this);
 
-        if (place.getNote().isEmpty()) {
+        if (mSelectedPlace.getNote().isEmpty()) {
             builder.setTitle("Add a note");
         } else {
             builder.setTitle("Edit your note");
         }
 
         if (mNoteDraft == null || mNoteDraft.isEmpty()) {
-            input.setText(place.getNote());
+            input.setText(mSelectedPlace.getNote());
         } else {
             input.setText(mNoteDraft);
         }
@@ -291,31 +206,190 @@ public class DetailActivity extends AppCompatActivity {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 String note = input.getText().toString();
-                String msg;
 
-                place.setNote(note);
-                if (mHelper.setNoteById(place.getId(), note)) {
-                    if (note.isEmpty()) {
-                        mNoteView.setText(getString(R.string.detail_msg_click_to_add_note));
-                        mNoteView.setHint("Enter a note to add it to this place");
-                    } else {
-                        note = "Your note: " + note;
-                        mNoteView.setText(note);
-                    }
-                    msg = "Your note was saved to " + place.getTitle();
-                } else {
-                    msg = ERR_MSG_NOTE_NOT_SAVED;
-                }
+                UpdateNoteAsyncTask task = new UpdateNoteAsyncTask();
+                task.execute(note);
 
                 dialog.dismiss();
-                Snackbar.make(
-                        findViewById(R.id.coordinator_layout_detail),
-                        msg,
-                        Snackbar.LENGTH_SHORT
-                ).show();
             }
         });
 
         builder.show();
+    }
+
+    private class GetSelectedPlaceAndSetViewsAsyncTask extends AsyncTask<Void, Void, Boolean> {
+
+        @Override
+        protected Boolean doInBackground(Void... params) {
+            mHelper = PlaceDbOpenHelper.getInstance(DetailActivity.this);
+            mSelectedPlace = mHelper.getPlaceById(mSelectedPlaceId);
+            return mSelectedPlace != null;
+        }
+
+        @Override
+        protected void onPostExecute(Boolean aBoolean) {
+            super.onPostExecute(aBoolean);
+            if (aBoolean) {
+                if (getSupportActionBar() != null) {
+                    getSupportActionBar().setTitle(mSelectedPlace.getTitle());
+                }
+                mToolbar.setContentDescription(mSelectedPlace.getTitle());
+
+                int resId = getResources().getIdentifier(
+                        mSelectedPlace.getImageRes(),    // file name w/o extension
+                        "raw",                          // file stored in res/raw/
+                        getPackageName()
+                );
+                if (resId != 0) { // getIdentifier returns 0 if resource not found
+                    Bitmap image = BitmapFactory.decodeResource(getResources(), resId);
+                    mImageView.setImageBitmap(image);
+                }
+
+                String overviewText = mSelectedPlace.getCategory() + " | "
+                        + mSelectedPlace.getLocation() + " | "
+                        + mSelectedPlace.getNeighborhood();
+                mOverviewView.setText(overviewText);
+
+                if (mSelectedPlace.getNote().isEmpty()) {
+                    mNoteView.setText(getString(R.string.detail_msg_click_to_add_note));
+                } else {
+                    String note = "Your note: " + mSelectedPlace.getNote();
+                    mNoteView.setText(note);
+                }
+
+                mDescriptionView.setText(mSelectedPlace.getDescription());
+
+                if (!mSelectedPlace.getImageCredit().isEmpty()) {
+                    String credit = "Photo credit: " + mSelectedPlace.getImageCredit();
+                    TextView imageCreditView = (TextView) findViewById(R.id.detail_image_credit);
+                    imageCreditView.setText(credit);
+                }
+
+                mRatingBar.setRating(mSelectedPlace.getRating());
+                if (mRatingBar.getRating() > 0) {
+                    mRatingBar.setContentDescription("Rating bar: give this place a rating of 0 to 5 stars. Current rating is " + mRatingBar.getRating());
+                } else {
+                    mRatingBar.setContentDescription("Rating bar: give this place a rating of 0 to 5 stars. No rating set.");
+                }
+
+                setFabFavIcon();
+                if (mSelectedPlace.isFavorite()) {
+                    mFab.setContentDescription("Click to remove this place from favorites");
+                } else {
+                    mFab.setContentDescription("Click to add this place to favorites");
+                }
+            }
+        }
+    }
+
+    private class UpdateRatingAsyncTask extends AsyncTask<Float, Void, Boolean> {
+
+        @Override
+        protected Boolean doInBackground(Float... params) {
+            mSelectedPlace.setRating(params[0]);
+            return mHelper.setRatingById(mSelectedPlaceId, params[0]); // true if successful, else false
+        }
+
+        @Override
+        protected void onPostExecute(Boolean aBoolean) {
+            super.onPostExecute(aBoolean);
+
+            String msg;
+            if (aBoolean) {
+                msg = "Your rating of " + mSelectedPlace.getRating() + " stars was saved for "
+                        + mSelectedPlace.getTitle();
+            } else {
+                msg = ERR_MSG_RATING_NOT_SAVED;
+            }
+
+            // reset content description
+            if (mRatingBar.getRating() > 0) {
+                mRatingBar.setContentDescription("Rating bar: give this place a rating of 0 to 5 stars. Current rating is "
+                        + mSelectedPlace.getRating());
+            } else {
+                mRatingBar.setContentDescription("Rating bar: give this place a rating of 0 to 5 stars. No rating set.");
+            }
+
+            Snackbar.make(
+                    findViewById(R.id.coordinator_layout_detail),
+                    msg,
+                    Snackbar.LENGTH_SHORT
+            ).show();
+        }
+    }
+
+    private class UpdateFavStatusAsyncClass extends AsyncTask<Void, Void, Boolean> {
+
+        @Override
+        protected Boolean doInBackground(Void... params) {
+            mSelectedPlace.setFavoriteStatus(!mSelectedPlace.isFavorite()); // toggle to opposite value
+            return mHelper.setFavoriteStatusById(mSelectedPlaceId, mSelectedPlace.isFavorite());
+        }
+
+        @Override
+        protected void onPostExecute(Boolean aBoolean) {
+            super.onPostExecute(aBoolean);
+
+            String msg;
+            if (aBoolean) {
+                setFabFavIcon();
+                if (mSelectedPlace.isFavorite()) {
+                    msg = mSelectedPlace.getTitle() + " favorited";
+                } else {
+                    msg = mSelectedPlace.getTitle() + " unfavorited";
+                }
+                mChangeToFavStatus = !mChangeToFavStatus; // toggle to indicate change and allow change to be "undone" by next change
+            } else {
+                msg = ERR_MSG_FAVORITE_STATUS_NOT_SAVED;
+            }
+
+            // reset content descriptions on click
+            if (mSelectedPlace.isFavorite()) {
+                mFab.setContentDescription("Click to remove this place from favorites");
+            } else {
+                mFab.setContentDescription("Click to add this place to favorites");
+            }
+
+            Snackbar.make(
+                    findViewById(R.id.coordinator_layout_detail),
+                    msg,
+                    Snackbar.LENGTH_SHORT
+            ).show();
+        }
+    }
+
+    private class UpdateNoteAsyncTask extends AsyncTask<String, Void, Boolean> {
+
+        @Override
+        protected Boolean doInBackground(String... params) {
+            mSelectedPlace.setNote(params[0]);
+            return mHelper.setNoteById(mSelectedPlaceId, mSelectedPlace.getNote());
+        }
+
+        @Override
+        protected void onPostExecute(Boolean aBoolean) {
+            super.onPostExecute(aBoolean);
+
+            String msg;
+            if (aBoolean) {
+                String note = mSelectedPlace.getNote();
+                if (note.isEmpty()) {
+                    mNoteView.setText(getString(R.string.detail_msg_click_to_add_note));
+                    mNoteView.setHint("Enter a note to add it to this place");
+                } else {
+                    note = "Your note: " + note;
+                    mNoteView.setText(note);
+                }
+                msg = "Your note was saved to " + mSelectedPlace.getTitle();
+            } else {
+                msg = ERR_MSG_NOTE_NOT_SAVED;
+            }
+
+            Snackbar.make(
+                    findViewById(R.id.coordinator_layout_detail),
+                    msg,
+                    Snackbar.LENGTH_SHORT
+            ).show();
+        }
     }
 }
